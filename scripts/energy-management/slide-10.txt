@@ -1,0 +1,29 @@
+Supply is only half of the problem.
+
+Demand can sometimes be managed too.
+
+Consider a hospital microgrid during a constrained operating period.
+
+Some loads are non-negotiable.
+
+Emergency equipment, critical communications, essential lighting, and clinical systems that must remain available.
+
+Other loads may have some flexibility.
+
+Electric vehicle charging could be delayed.
+
+Some noncritical heating, ventilation, and air-conditioning zones, or temperature setpoints, might be adjusted temporarily.
+
+Certain discretionary or administrative loads might be reduced.
+
+That does not mean we simply turn off heating, ventilation, and air conditioning in a hospital.
+
+Critical ventilation, pressure control, operating-room systems, and other clinical functions may be essential.
+
+The point is that not all demand has the same priority or the same timing flexibility.
+
+This is the idea behind demand response, load prioritization, and load shedding.
+
+Instead of asking only, where can I get more power?
+
+We can also ask, which demand really has to occur right now?

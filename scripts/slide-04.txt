@@ -1,0 +1,9 @@
+Here is our first big-picture view. Follow the production and consumption lines toward the right side of the graph.
+
+In recent years, U.S. energy production has exceeded total consumption. Now, if a country produces more energy than it consumes, what would you expect to happen to imports?
+
+<break time="1.0s" />
+
+You might expect them to disappear. But they do not. The United States still both imports and exports large quantities of energy.
+
+That is our first reminder that a national energy balance is not the same thing as being self-contained. Different fuels, refined products, infrastructure, geography, and markets still move energy across borders even when total domestic production exceeds total consumption.

@@ -1,0 +1,19 @@
+If energy is available, why manage it at all?
+
+Because having energy available is not the same thing as delivering the right amount, at the right time, under the right constraints.
+
+A good energy system has to balance several objectives at once.
+
+We want reliability, but we also care about efficiency, cost, emissions, resilience, and equipment limits.
+
+And sometimes those goals compete.
+
+For example, keeping a dispatchable generator online at partial load may improve reliability because it can respond quickly if conditions change.
+
+But that same decision may increase fuel use, emissions, and operating cost.
+
+Or consider a battery.
+
+Discharging it now may reduce the evening peak, but if we use too much of its stored energy too early, we may have less flexibility later in the night.
+
+So energy management is really about making good tradeoffs while maintaining service.

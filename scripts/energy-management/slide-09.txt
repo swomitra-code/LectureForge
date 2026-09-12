@@ -1,0 +1,25 @@
+Let's focus on the surplus case.
+
+If renewable generation exceeds demand, there is no rule that says every available unit of renewable generation must be used immediately.
+
+We have choices.
+
+We can store the energy for later.
+
+We can export it if a neighboring system or market can accept it.
+
+We can move flexible demand into the surplus period.
+
+Or we can curtail generation.
+
+Curtailment sometimes sounds like failure, but it can be a perfectly legitimate operating decision.
+
+Suppose the battery is full, transmission out of the area is congested, and local demand is already satisfied.
+
+In that situation, reducing renewable output may be safer and more economical than trying to force additional power onto the system.
+
+Curtailment can also occur because of reliability constraints or market conditions.
+
+So the engineering question is not, did we use every available unit of renewable generation?
+
+The better question is, did we operate the overall system well?

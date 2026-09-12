@@ -1,0 +1,92 @@
+﻿{
+    "manifest":  "C:\\Users\\swomi\\Dropbox\\Undergradaute Affairs\\AI Education PCE\\LectureForge\\LectureForge_Codex_Pilot_Bundle\\config\\module1.json",
+    "source_pptx":  "C:\\Users\\swomi\\Dropbox\\Undergradaute Affairs\\AI Education PCE\\LectureForge\\LectureForge_Codex_Pilot_Bundle\\source\\Module1_Energy_Landscape_2026_Refresh_Cleaned_No_Old_Photo_FINAL2.pptx",
+    "output_pptx":  "C:\\Users\\swomi\\Dropbox\\Undergradaute Affairs\\AI Education PCE\\LectureForge\\LectureForge_Codex_Pilot_Bundle\\output\\Module1_Energy_Landscape_MANIFEST_REGRESSION.pptx",
+    "source_slide_count":  15,
+    "output_slide_count":  15,
+    "slide_count_unchanged":  true,
+    "requested_slides":  [
+                             10,
+                             11,
+                             12
+                         ],
+    "unrelated_slides_verified":  [
+                                      1,
+                                      2,
+                                      3,
+                                      4,
+                                      5,
+                                      6,
+                                      7,
+                                      8,
+                                      9,
+                                      13,
+                                      14,
+                                      15
+                                  ],
+    "unrelated_slides_unchanged":  true,
+    "videos":  {
+                   "10":  {
+                              "path":  "C:\\Users\\swomi\\Dropbox\\Undergradaute Affairs\\AI Education PCE\\LectureForge\\LectureForge_Codex_Pilot_Bundle\\output\\module1-manifest-media\\slide-10-final.mp4",
+                              "duration_seconds":  34.133333,
+                              "video_codec":  "h264",
+                              "audio_codec":  "aac",
+                              "width":  1920,
+                              "height":  1080,
+                              "decode_ok":  true
+                          },
+                   "11":  {
+                              "path":  "C:\\Users\\swomi\\Dropbox\\Undergradaute Affairs\\AI Education PCE\\LectureForge\\LectureForge_Codex_Pilot_Bundle\\output\\module1-manifest-media\\slide-11-final.mp4",
+                              "duration_seconds":  47.066667,
+                              "video_codec":  "h264",
+                              "audio_codec":  "aac",
+                              "width":  1920,
+                              "height":  1080,
+                              "decode_ok":  true
+                          },
+                   "12":  {
+                              "path":  "C:\\Users\\swomi\\Dropbox\\Undergradaute Affairs\\AI Education PCE\\LectureForge\\LectureForge_Codex_Pilot_Bundle\\output\\module1-manifest-media\\slide-12-final.mp4",
+                              "duration_seconds":  56.266667,
+                              "video_codec":  "h264",
+                              "audio_codec":  "aac",
+                              "width":  1920,
+                              "height":  1080,
+                              "decode_ok":  true
+                          }
+               },
+    "slides":  {
+                   "10":  {
+                              "media_shape_count":  1,
+                              "expected_media_shape_count":  1,
+                              "media_is_linked":  false,
+                              "media_fills_slide":  true,
+                              "starts_automatically":  true,
+                              "play_on_entry":  true,
+                              "playback_position_advanced":  true,
+                              "playback_error":  null,
+                              "editable_underlay_preserved":  true
+                          },
+                   "11":  {
+                              "media_shape_count":  1,
+                              "expected_media_shape_count":  1,
+                              "media_is_linked":  false,
+                              "media_fills_slide":  true,
+                              "starts_automatically":  true,
+                              "play_on_entry":  true,
+                              "playback_position_advanced":  true,
+                              "playback_error":  null,
+                              "editable_underlay_preserved":  true
+                          },
+                   "12":  {
+                              "media_shape_count":  1,
+                              "expected_media_shape_count":  1,
+                              "media_is_linked":  false,
+                              "media_fills_slide":  true,
+                              "starts_automatically":  true,
+                              "play_on_entry":  true,
+                              "playback_position_advanced":  true,
+                              "playback_error":  null,
+                              "editable_underlay_preserved":  true
+                          }
+               }
+}

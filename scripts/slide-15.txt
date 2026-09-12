@@ -1,0 +1,15 @@
+We have looked at a lot of data, but I do not want the main takeaway to be a list of percentages.
+
+I want you to leave this module with a way of thinking.
+
+When you see an energy claim, pause and ask three questions.
+
+What system am I looking at?
+
+What exactly is being measured?
+
+And what important factors are outside the boundary?
+
+Those three questions explain why U.S. production can exceed consumption while imports and exports continue, why renewables can provide about 24 percent of utility-scale electricity but about 9 percent of total primary energy consumption, and why E. R. O. I. can tell us something important without telling us everything.
+
+If you build that habit, you will be much better prepared to evaluate the individual technologies we examine next.

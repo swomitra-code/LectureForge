@@ -1,0 +1,27 @@
+The scale of natural energy flows is enormous.
+
+Incoming solar radiation alone is on the order of one hundred seventy-three thousand terawatts globally.
+
+Wind, the hydrologic cycle, geothermal heat, and tides are much smaller than solar, but they are still physically significant.
+
+Now, it is important not to misread this figure.
+
+One hundred seventy-three thousand terawatts of incoming solar radiation does not mean we could build solar panels and produce one hundred seventy-three thousand terawatts of useful electricity.
+
+Only a fraction of the incoming resource reaches suitable locations.
+
+Only part of that can be captured.
+
+Conversion efficiency matters.
+
+Land, transmission, infrastructure, environmental constraints, and economics all matter.
+
+The same caution applies to geothermal heat and hydrologic flow.
+
+These are natural physical flow rates, not practical generating capacity.
+
+So the engineering lesson is this.
+
+A resource can be physically abundant and still be difficult, expensive, intermittent, geographically constrained, or technically challenging to use.
+
+That distinction between resource abundance and usable energy will come up repeatedly in renewable energy.

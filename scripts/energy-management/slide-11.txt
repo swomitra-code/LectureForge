@@ -1,0 +1,31 @@
+Storage gives us another powerful option.
+
+The key idea is simple.
+
+Storage does not create energy.
+
+It moves energy through time.
+
+During a surplus period, we charge the battery.
+
+Later, when generation is lower than demand, we discharge it.
+
+This also gives us an important distinction between power and energy.
+
+Power, measured in megawatts, tells us how fast energy can be delivered.
+
+Energy, measured in megawatt-hours, tells us how much is stored.
+
+So a battery rated at one hundred megawatts, with four hundred megawatt-hours of stored energy, has a nominal four-hour duration at rated power.
+
+Now compare that with a hypothetical two hundred megawatt battery with two hundred megawatt-hours of stored energy.
+
+That second battery can deliver twice as much power, but only for about one hour at rated output.
+
+The first battery has more duration.
+
+The second has more instantaneous power capability.
+
+That is why megawatts and megawatt-hours are not interchangeable.
+
+They describe two different design questions.

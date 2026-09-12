@@ -1,0 +1,19 @@
+A thermostat gives us a familiar example of feedback control.
+
+You set a desired temperature.
+
+A sensor measures the actual room temperature.
+
+The controller compares the two, and the heating or cooling system responds.
+
+Then the sensor measures again.
+
+That loop keeps the system from operating blindly.
+
+Modern energy-management systems are more complex than a thermostat.
+
+They may use forecasts, optimization, supervisory control, operating constraints, and sometimes market signals as well.
+
+But feedback is still one of the fundamental building blocks.
+
+We measure the real system, respond, and measure again.

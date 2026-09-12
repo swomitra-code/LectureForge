@@ -1,0 +1,441 @@
+{
+    "schema_version":  1,
+    "baseline_tag":  "lectureforge-v1-baseline",
+    "hash_algorithm":  "SHA-256",
+    "path_base":  "repository_root",
+    "scope":  "Referenced source decks, instructor-selected narration, and bound avatars for enabled or explicitly approved slides. The approved pilot avatar contains its narration audio; no separate narration file is referenced by the pilot manifest.",
+    "assets":  [
+                   {
+                       "relative_path":  "media/energy-management/slide-8-take-3.mp3",
+                       "filename":  "slide-8-take-3.mp3",
+                       "size_bytes":  1055391,
+                       "sha256":  "0B50B2FE39B1C58CB9C6474C3C4CD3A3E9A9DF50CAC5FDD28A810B4D58C61DA7",
+                       "asset_role":  "selected_narration",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json",
+                                         "config/energy-management.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "source/Renewable-Energy-Module-1-Energy-Management.pptx",
+                       "filename":  "Renewable-Energy-Module-1-Energy-Management.pptx",
+                       "size_bytes":  12598315,
+                       "sha256":  "B9627937510607EE90FA710E5F2871A53EA4E253BF54DCF8ED06C5E2592FDB48",
+                       "asset_role":  "source_pptx",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-9-take-3.mp3",
+                       "filename":  "slide-9-take-3.mp3",
+                       "size_bytes":  880684,
+                       "sha256":  "8BBC1E372152A6D788B332F8ACF1F66062101AB042DF16C3FAD804BF53583C19",
+                       "asset_role":  "selected_narration",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json",
+                                         "config/energy-management.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-9-SKM-BLUE-7-production-transparent.webm",
+                       "filename":  "slide-9-SKM-BLUE-7-production-transparent.webm",
+                       "size_bytes":  30361619,
+                       "sha256":  "2A3C7901E0DD730C34F0353E321D25DDED3299054A6182E0D4BDF28C92311FA8",
+                       "asset_role":  "avatar",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "source/Renewable-Energy-Module-1-Energy-Management(1).pptx",
+                       "filename":  "Renewable-Energy-Module-1-Energy-Management(1).pptx",
+                       "size_bytes":  12598315,
+                       "sha256":  "B9627937510607EE90FA710E5F2871A53EA4E253BF54DCF8ED06C5E2592FDB48",
+                       "asset_role":  "source_pptx",
+                       "manifests":  [
+                                         "config/energy-management.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-10-take-2.mp3",
+                       "filename":  "slide-10-take-2.mp3",
+                       "size_bytes":  914120,
+                       "sha256":  "3EF3883B2B8815FFC0DA4B50576E75D8D6AD162ED4A24B99B91F8FA08D679342",
+                       "asset_role":  "selected_narration",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json",
+                                         "config/energy-management.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-1-SKM-BLUE-7-production-transparent.webm",
+                       "filename":  "slide-1-SKM-BLUE-7-production-transparent.webm",
+                       "size_bytes":  16363709,
+                       "sha256":  "2F3F3C5AFD168A236705EE93383015A902D673A4161AAAE9215F1162B79F7825",
+                       "asset_role":  "avatar",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-6-take-1.mp3",
+                       "filename":  "slide-6-take-1.mp3",
+                       "size_bytes":  1134385,
+                       "sha256":  "799352CF08ACF7465F934227C116A514B9FDB78A03C977A5685784F10EF219C0",
+                       "asset_role":  "selected_narration",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json",
+                                         "config/energy-management.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-4-SKM-BLUE-7-production-transparent.webm",
+                       "filename":  "slide-4-SKM-BLUE-7-production-transparent.webm",
+                       "size_bytes":  38222439,
+                       "sha256":  "AD314F51FE091B66427451DDE5E300A1BA20A0D029AFDBC15B2709F3CB6D6FD1",
+                       "asset_role":  "avatar",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-7-take-3.mp3",
+                       "filename":  "slide-7-take-3.mp3",
+                       "size_bytes":  568886,
+                       "sha256":  "CA04CEB5B81930A19A00BBB8E5FBA96230301B85C74ABB2D734A62BA2D25B0CD",
+                       "asset_role":  "selected_narration",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json",
+                                         "config/energy-management.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/Module_1_Slide_10_-_Take_2_-_SKM-BLUE-7.webm",
+                       "filename":  "Module_1_Slide_10_-_Take_2_-_SKM-BLUE-7.webm",
+                       "size_bytes":  12073769,
+                       "sha256":  "C9EC5BD1FB462A55DD838371C2D4ED74E72D46A8511026310D560D649E42E3E2",
+                       "asset_role":  "avatar",
+                       "manifests":  [
+                                         "module1.pilot.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-2-take-3.mp3",
+                       "filename":  "slide-2-take-3.mp3",
+                       "size_bytes":  836380,
+                       "sha256":  "9A11AEF5E5B38BAFAB388CE2D25429AC58D12337B42A22C1121181DAABABF3F9",
+                       "asset_role":  "selected_narration",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json",
+                                         "config/energy-management.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-5-SKM-BLUE-7-production-transparent.webm",
+                       "filename":  "slide-5-SKM-BLUE-7-production-transparent.webm",
+                       "size_bytes":  35139092,
+                       "sha256":  "3D8B2F9D3B1692DF47CAF5B4CBD81738D884C56366B5AAC2A1B1EE764A6FE809",
+                       "asset_role":  "avatar",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-10-SKM-BLUE-7-production-transparent.webm",
+                       "filename":  "slide-10-SKM-BLUE-7-production-transparent.webm",
+                       "size_bytes":  32038044,
+                       "sha256":  "6E480FB25B5BB2B67EF140C2466B84E6635538359810ECFA5AA2324E19F4B62D",
+                       "asset_role":  "avatar",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-16-SKM-BLUE-7-production-transparent.webm",
+                       "filename":  "slide-16-SKM-BLUE-7-production-transparent.webm",
+                       "size_bytes":  19998584,
+                       "sha256":  "A406DE2CA62A756278317C4C82A90EE8CCDE0EF40097D2BBF3374140C6C66662",
+                       "asset_role":  "avatar",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-1-take-1.mp3",
+                       "filename":  "slide-1-take-1.mp3",
+                       "size_bytes":  526254,
+                       "sha256":  "5E6590008BF3F3032C4B9B177756598EDA9015EBB9F5C7BE2474FAD80255DE61",
+                       "asset_role":  "selected_narration",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json",
+                                         "config/energy-management.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-12-SKM-BLUE-7-production-transparent.webm",
+                       "filename":  "slide-12-SKM-BLUE-7-production-transparent.webm",
+                       "size_bytes":  38642868,
+                       "sha256":  "F6A4656AC920F470F51A78C36C2C93C00107F0F89D84CBE1FD9B4D602DF36C1F",
+                       "asset_role":  "avatar",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-17-take-2.mp3",
+                       "filename":  "slide-17-take-2.mp3",
+                       "size_bytes":  568886,
+                       "sha256":  "746526C09A64C54A95553677EE28222DA1BA17E03A262F20F704E25561A1F108",
+                       "asset_role":  "selected_narration",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json",
+                                         "config/energy-management.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-4-take-1.mp3",
+                       "filename":  "slide-4-take-1.mp3",
+                       "size_bytes":  1115577,
+                       "sha256":  "004AE39E649651CFC9FE5D09603980FC43112AC50902CA0307B975DD236D0B52",
+                       "asset_role":  "selected_narration",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json",
+                                         "config/energy-management.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-15-SKM-BLUE-7-production-transparent.webm",
+                       "filename":  "slide-15-SKM-BLUE-7-production-transparent.webm",
+                       "size_bytes":  42760252,
+                       "sha256":  "F98BAE50F90D93F13BAB972711519A8E298D742EB2728A9B8EC47B9603157AFF",
+                       "asset_role":  "avatar",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-3-take-2.mp3",
+                       "filename":  "slide-3-take-2.mp3",
+                       "size_bytes":  1071691,
+                       "sha256":  "EE2EB001A877E60ADF3DD668C856B0C45CA2B1CF11A6B9F020B420E3B1047C18",
+                       "asset_role":  "selected_narration",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json",
+                                         "config/energy-management.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-13-take-3.mp3",
+                       "filename":  "slide-13-take-3.mp3",
+                       "size_bytes":  1028641,
+                       "sha256":  "D958023C1920633C3D6923452C768153E0FAE17F3E747F7E10ADFE491C226C61",
+                       "asset_role":  "selected_narration",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json",
+                                         "config/energy-management.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-8-SKM-BLUE-7-production-transparent.webm",
+                       "filename":  "slide-8-SKM-BLUE-7-production-transparent.webm",
+                       "size_bytes":  34193224,
+                       "sha256":  "87CC5B3C5DC8985185AC1A8FD98336EF3A9A55A394F3A01D42C3CBCC448DE69D",
+                       "asset_role":  "avatar",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-11-SKM-BLUE-7-production-transparent.webm",
+                       "filename":  "slide-11-SKM-BLUE-7-production-transparent.webm",
+                       "size_bytes":  31970674,
+                       "sha256":  "5503DC02F5716442EC4D97E6A2D9183725598B071F357150E47AC5E0BA8FF025",
+                       "asset_role":  "avatar",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "source/Module1_Energy_Landscape_2026_Refresh_Cleaned_No_Old_Photo_FINAL2.pptx",
+                       "filename":  "Module1_Energy_Landscape_2026_Refresh_Cleaned_No_Old_Photo_FINAL2.pptx",
+                       "size_bytes":  3294481,
+                       "sha256":  "7C44A3B3162CC673280745C4BC071FE326F4CF3DCC2F9A3884F95DDCA01E3053",
+                       "asset_role":  "source_pptx",
+                       "manifests":  [
+                                         "module1.pilot.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-11-take-2.mp3",
+                       "filename":  "slide-11-take-2.mp3",
+                       "size_bytes":  923315,
+                       "sha256":  "31CD7868E3423790F96953FE88AAF42B35467CAAAB68951DF67ABD6E61F7B78D",
+                       "asset_role":  "selected_narration",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json",
+                                         "config/energy-management.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-16-take-1.mp3",
+                       "filename":  "slide-16-take-1.mp3",
+                       "size_bytes":  591038,
+                       "sha256":  "08A53CDED0999229FEA734CC3AAB19198CDF0056C0E3FCDBB10EA7EAFA3A65F8",
+                       "asset_role":  "selected_narration",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json",
+                                         "config/energy-management.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-17-SKM-BLUE-7-production-transparent.webm",
+                       "filename":  "slide-17-SKM-BLUE-7-production-transparent.webm",
+                       "size_bytes":  18908865,
+                       "sha256":  "0DCEB90A9DF81A1A517891F4D996427581F1CCA7C89165220C10FDA717D860E0",
+                       "asset_role":  "avatar",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-15-take-2.mp3",
+                       "filename":  "slide-15-take-2.mp3",
+                       "size_bytes":  1243472,
+                       "sha256":  "A696BFB38415F4D8CF487D2DF0AB48EDBB2868872158F46AE3A8E246592FB91B",
+                       "asset_role":  "selected_narration",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json",
+                                         "config/energy-management.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-14-take-2.mp3",
+                       "filename":  "slide-14-take-2.mp3",
+                       "size_bytes":  802107,
+                       "sha256":  "29DF353D971AAF62B89F61BE571D97B38AD8CB16833F9E9164A4A15D3DF20783",
+                       "asset_role":  "selected_narration",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json",
+                                         "config/energy-management.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-2-SKM-BLUE-7-production-transparent.webm",
+                       "filename":  "slide-2-SKM-BLUE-7-production-transparent.webm",
+                       "size_bytes":  29188482,
+                       "sha256":  "5CFFBD7C0C631B35C3517E3746E1E4514BC5F645D2FAFA81C67A28ABDEEEA974",
+                       "asset_role":  "avatar",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-5-take-2.mp3",
+                       "filename":  "slide-5-take-2.mp3",
+                       "size_bytes":  1016938,
+                       "sha256":  "2F28010BBE7BCDE524FF0C154D1A4FBCF02766FC4A3B6C10222346353171D7F6",
+                       "asset_role":  "selected_narration",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json",
+                                         "config/energy-management.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-14-SKM-BLUE-7-production-transparent.webm",
+                       "filename":  "slide-14-SKM-BLUE-7-production-transparent.webm",
+                       "size_bytes":  27948827,
+                       "sha256":  "2033FD9090355ED39AA957726CBC80633B34AA8E0064399F3DFAB73BCDFF60AB",
+                       "asset_role":  "avatar",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-3-SKM-BLUE-7-production-transparent.webm",
+                       "filename":  "slide-3-SKM-BLUE-7-production-transparent.webm",
+                       "size_bytes":  37558241,
+                       "sha256":  "C982956D46C572C45CB45CCC6C8F2F9838A41901B3EB8310A708AE44DB6D5BEF",
+                       "asset_role":  "avatar",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-13-SKM-BLUE-7-production-transparent.webm",
+                       "filename":  "slide-13-SKM-BLUE-7-production-transparent.webm",
+                       "size_bytes":  33549516,
+                       "sha256":  "AB417B02791631E3E3D78E04CB593C623EAEEA925BC836D8924A40C98AD66C44",
+                       "asset_role":  "avatar",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-12-take-2.mp3",
+                       "filename":  "slide-12-take-2.mp3",
+                       "size_bytes":  1108889,
+                       "sha256":  "1381A408A3729A727C5521E8B6C77681102BAFD26A839B08BAAED1F625F32756",
+                       "asset_role":  "selected_narration",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json",
+                                         "config/energy-management.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-6-SKM-BLUE-7-production-transparent.webm",
+                       "filename":  "slide-6-SKM-BLUE-7-production-transparent.webm",
+                       "size_bytes":  37502673,
+                       "sha256":  "97FBC3A902AB54E03B6F4BA6390598310746534F065A139BAE631B4180164DD7",
+                       "asset_role":  "avatar",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json"
+                                     ]
+                   },
+                   {
+                       "relative_path":  "media/energy-management/slide-7-SKM-BLUE-7-production-transparent.webm",
+                       "filename":  "slide-7-SKM-BLUE-7-production-transparent.webm",
+                       "size_bytes":  17999486,
+                       "sha256":  "1F006A666C8AEC06E11FF67734273C7D7BD2CC1368D4EA6B9FBE8B51333615E3",
+                       "asset_role":  "avatar",
+                       "manifests":  [
+                                         "config/module1.json",
+                                         "config/module1-build-temp.json"
+                                     ]
+                   }
+               ]
+}

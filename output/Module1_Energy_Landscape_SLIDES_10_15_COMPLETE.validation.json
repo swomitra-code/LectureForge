@@ -1,0 +1,453 @@
+﻿{
+    "manifest":  "C:\\Users\\swomi\\Dropbox\\Undergradaute Affairs\\AI Education PCE\\LectureForge\\LectureForge_Codex_Pilot_Bundle\\config\\module1.json",
+    "source_pptx":  "C:\\Users\\swomi\\Dropbox\\Undergradaute Affairs\\AI Education PCE\\LectureForge\\LectureForge_Codex_Pilot_Bundle\\source\\Module1_Energy_Landscape_2026_Refresh_Cleaned_No_Old_Photo_FINAL2.pptx",
+    "output_pptx":  "C:\\Users\\swomi\\Dropbox\\Undergradaute Affairs\\AI Education PCE\\LectureForge\\LectureForge_Codex_Pilot_Bundle\\output\\Module1_Energy_Landscape_SLIDES_10_15_COMPLETE.pptx",
+    "source_slide_count":  15,
+    "output_slide_count":  15,
+    "slide_count_unchanged":  true,
+    "requested_slides":  [
+                             1,
+                             2,
+                             3,
+                             4,
+                             5,
+                             6,
+                             7,
+                             8,
+                             9,
+                             10,
+                             11,
+                             12,
+                             13,
+                             14,
+                             15
+                         ],
+    "unrelated_slides_verified":  [
+
+                                  ],
+    "unrelated_slides_unchanged":  true,
+    "videos":  {
+                   "1":  {
+                             "path":  "C:\\Users\\swomi\\Dropbox\\Undergradaute Affairs\\AI Education PCE\\LectureForge\\LectureForge_Codex_Pilot_Bundle\\output\\module1-slides-10-14-media\\slide-1-final.mp4",
+                             "duration_seconds":  43.1,
+                             "video_codec":  "h264",
+                             "audio_codec":  "aac",
+                             "width":  1920,
+                             "height":  1080,
+                             "decode_ok":  true
+                         },
+                   "2":  {
+                             "path":  "C:\\Users\\swomi\\Dropbox\\Undergradaute Affairs\\AI Education PCE\\LectureForge\\LectureForge_Codex_Pilot_Bundle\\output\\module1-slides-10-14-media\\slide-2-final.mp4",
+                             "duration_seconds":  27.066667,
+                             "video_codec":  "h264",
+                             "audio_codec":  "aac",
+                             "width":  1920,
+                             "height":  1080,
+                             "decode_ok":  true
+                         },
+                   "3":  {
+                             "path":  "C:\\Users\\swomi\\Dropbox\\Undergradaute Affairs\\AI Education PCE\\LectureForge\\LectureForge_Codex_Pilot_Bundle\\output\\module1-slides-10-14-media\\slide-3-final.mp4",
+                             "duration_seconds":  42.9,
+                             "video_codec":  "h264",
+                             "audio_codec":  "aac",
+                             "width":  1920,
+                             "height":  1080,
+                             "decode_ok":  true
+                         },
+                   "4":  {
+                             "path":  "C:\\Users\\swomi\\Dropbox\\Undergradaute Affairs\\AI Education PCE\\LectureForge\\LectureForge_Codex_Pilot_Bundle\\output\\module1-slides-10-14-media\\slide-4-final.mp4",
+                             "duration_seconds":  39.966667,
+                             "video_codec":  "h264",
+                             "audio_codec":  "aac",
+                             "width":  1920,
+                             "height":  1080,
+                             "decode_ok":  true
+                         },
+                   "5":  {
+                             "path":  "C:\\Users\\swomi\\Dropbox\\Undergradaute Affairs\\AI Education PCE\\LectureForge\\LectureForge_Codex_Pilot_Bundle\\output\\module1-slides-10-14-media\\slide-5-final.mp4",
+                             "duration_seconds":  28.966667,
+                             "video_codec":  "h264",
+                             "audio_codec":  "aac",
+                             "width":  1920,
+                             "height":  1080,
+                             "decode_ok":  true
+                         },
+                   "6":  {
+                             "path":  "C:\\Users\\swomi\\Dropbox\\Undergradaute Affairs\\AI Education PCE\\LectureForge\\LectureForge_Codex_Pilot_Bundle\\output\\module1-slides-10-14-media\\slide-6-final.mp4",
+                             "duration_seconds":  34.833333,
+                             "video_codec":  "h264",
+                             "audio_codec":  "aac",
+                             "width":  1920,
+                             "height":  1080,
+                             "decode_ok":  true
+                         },
+                   "7":  {
+                             "path":  "C:\\Users\\swomi\\Dropbox\\Undergradaute Affairs\\AI Education PCE\\LectureForge\\LectureForge_Codex_Pilot_Bundle\\output\\module1-slides-10-14-media\\slide-7-final.mp4",
+                             "duration_seconds":  34.5,
+                             "video_codec":  "h264",
+                             "audio_codec":  "aac",
+                             "width":  1920,
+                             "height":  1080,
+                             "decode_ok":  true
+                         },
+                   "8":  {
+                             "path":  "C:\\Users\\swomi\\Dropbox\\Undergradaute Affairs\\AI Education PCE\\LectureForge\\LectureForge_Codex_Pilot_Bundle\\output\\module1-slides-10-14-media\\slide-8-final.mp4",
+                             "duration_seconds":  39.366667,
+                             "video_codec":  "h264",
+                             "audio_codec":  "aac",
+                             "width":  1920,
+                             "height":  1080,
+                             "decode_ok":  true
+                         },
+                   "9":  {
+                             "path":  "C:\\Users\\swomi\\Dropbox\\Undergradaute Affairs\\AI Education PCE\\LectureForge\\LectureForge_Codex_Pilot_Bundle\\output\\module1-slides-10-14-media\\slide-9-final.mp4",
+                             "duration_seconds":  35.861333,
+                             "video_codec":  "h264",
+                             "audio_codec":  "aac",
+                             "width":  1920,
+                             "height":  1080,
+                             "decode_ok":  true
+                         },
+                   "10":  {
+                              "path":  "C:\\Users\\swomi\\Dropbox\\Undergradaute Affairs\\AI Education PCE\\LectureForge\\LectureForge_Codex_Pilot_Bundle\\output\\module1-slides-10-14-media\\slide-10-final.mp4",
+                              "duration_seconds":  34.133333,
+                              "video_codec":  "h264",
+                              "audio_codec":  "aac",
+                              "width":  1920,
+                              "height":  1080,
+                              "decode_ok":  true
+                          },
+                   "11":  {
+                              "path":  "C:\\Users\\swomi\\Dropbox\\Undergradaute Affairs\\AI Education PCE\\LectureForge\\LectureForge_Codex_Pilot_Bundle\\output\\module1-slides-10-14-media\\slide-11-final.mp4",
+                              "duration_seconds":  47.066667,
+                              "video_codec":  "h264",
+                              "audio_codec":  "aac",
+                              "width":  1920,
+                              "height":  1080,
+                              "decode_ok":  true
+                          },
+                   "12":  {
+                              "path":  "C:\\Users\\swomi\\Dropbox\\Undergradaute Affairs\\AI Education PCE\\LectureForge\\LectureForge_Codex_Pilot_Bundle\\output\\module1-slides-10-14-media\\slide-12-final.mp4",
+                              "duration_seconds":  56.266667,
+                              "video_codec":  "h264",
+                              "audio_codec":  "aac",
+                              "width":  1920,
+                              "height":  1080,
+                              "decode_ok":  true
+                          },
+                   "13":  {
+                              "path":  "C:\\Users\\swomi\\Dropbox\\Undergradaute Affairs\\AI Education PCE\\LectureForge\\LectureForge_Codex_Pilot_Bundle\\output\\module1-slides-10-14-media\\slide-13-final.mp4",
+                              "duration_seconds":  36.458667,
+                              "video_codec":  "h264",
+                              "audio_codec":  "aac",
+                              "width":  1920,
+                              "height":  1080,
+                              "decode_ok":  true
+                          },
+                   "14":  {
+                              "path":  "C:\\Users\\swomi\\Dropbox\\Undergradaute Affairs\\AI Education PCE\\LectureForge\\LectureForge_Codex_Pilot_Bundle\\output\\module1-slides-10-14-media\\slide-14-final.mp4",
+                              "duration_seconds":  31.7,
+                              "video_codec":  "h264",
+                              "audio_codec":  "aac",
+                              "width":  1920,
+                              "height":  1080,
+                              "decode_ok":  true
+                          },
+                   "15":  {
+                              "path":  "C:\\Users\\swomi\\Dropbox\\Undergradaute Affairs\\AI Education PCE\\LectureForge\\LectureForge_Codex_Pilot_Bundle\\output\\module1-slides-10-14-media\\slide-15-final.mp4",
+                              "duration_seconds":  43.328,
+                              "video_codec":  "h264",
+                              "audio_codec":  "aac",
+                              "width":  1920,
+                              "height":  1080,
+                              "decode_ok":  true
+                          }
+               },
+    "slides":  {
+                   "1":  {
+                             "media_shape_count":  1,
+                             "expected_media_shape_count":  1,
+                             "media_is_linked":  false,
+                             "media_fills_slide":  true,
+                             "starts_automatically":  true,
+                             "play_on_entry":  true,
+                             "playback_position_advanced":  true,
+                             "playback_error":  null,
+                             "playback_probe_attempts":  1,
+                             "playback_probe_results":  [
+                                                            {
+                                                                "advanced":  true,
+                                                                "inconclusive":  false,
+                                                                "error":  null
+                                                            }
+                                                        ],
+                             "editable_underlay_preserved":  true
+                         },
+                   "2":  {
+                             "media_shape_count":  1,
+                             "expected_media_shape_count":  1,
+                             "media_is_linked":  false,
+                             "media_fills_slide":  true,
+                             "starts_automatically":  true,
+                             "play_on_entry":  true,
+                             "playback_position_advanced":  true,
+                             "playback_error":  null,
+                             "playback_probe_attempts":  1,
+                             "playback_probe_results":  [
+                                                            {
+                                                                "advanced":  true,
+                                                                "inconclusive":  false,
+                                                                "error":  null
+                                                            }
+                                                        ],
+                             "editable_underlay_preserved":  true
+                         },
+                   "3":  {
+                             "media_shape_count":  1,
+                             "expected_media_shape_count":  1,
+                             "media_is_linked":  false,
+                             "media_fills_slide":  true,
+                             "starts_automatically":  true,
+                             "play_on_entry":  true,
+                             "playback_position_advanced":  true,
+                             "playback_error":  null,
+                             "playback_probe_attempts":  1,
+                             "playback_probe_results":  [
+                                                            {
+                                                                "advanced":  true,
+                                                                "inconclusive":  false,
+                                                                "error":  null
+                                                            }
+                                                        ],
+                             "editable_underlay_preserved":  true
+                         },
+                   "4":  {
+                             "media_shape_count":  1,
+                             "expected_media_shape_count":  1,
+                             "media_is_linked":  false,
+                             "media_fills_slide":  true,
+                             "starts_automatically":  true,
+                             "play_on_entry":  true,
+                             "playback_position_advanced":  true,
+                             "playback_error":  null,
+                             "playback_probe_attempts":  1,
+                             "playback_probe_results":  [
+                                                            {
+                                                                "advanced":  true,
+                                                                "inconclusive":  false,
+                                                                "error":  null
+                                                            }
+                                                        ],
+                             "editable_underlay_preserved":  true
+                         },
+                   "5":  {
+                             "media_shape_count":  1,
+                             "expected_media_shape_count":  1,
+                             "media_is_linked":  false,
+                             "media_fills_slide":  true,
+                             "starts_automatically":  true,
+                             "play_on_entry":  true,
+                             "playback_position_advanced":  true,
+                             "playback_error":  null,
+                             "playback_probe_attempts":  1,
+                             "playback_probe_results":  [
+                                                            {
+                                                                "advanced":  true,
+                                                                "inconclusive":  false,
+                                                                "error":  null
+                                                            }
+                                                        ],
+                             "editable_underlay_preserved":  true
+                         },
+                   "6":  {
+                             "media_shape_count":  1,
+                             "expected_media_shape_count":  1,
+                             "media_is_linked":  false,
+                             "media_fills_slide":  true,
+                             "starts_automatically":  true,
+                             "play_on_entry":  true,
+                             "playback_position_advanced":  true,
+                             "playback_error":  null,
+                             "playback_probe_attempts":  1,
+                             "playback_probe_results":  [
+                                                            {
+                                                                "advanced":  true,
+                                                                "inconclusive":  false,
+                                                                "error":  null
+                                                            }
+                                                        ],
+                             "editable_underlay_preserved":  true
+                         },
+                   "7":  {
+                             "media_shape_count":  1,
+                             "expected_media_shape_count":  1,
+                             "media_is_linked":  false,
+                             "media_fills_slide":  true,
+                             "starts_automatically":  true,
+                             "play_on_entry":  true,
+                             "playback_position_advanced":  true,
+                             "playback_error":  null,
+                             "playback_probe_attempts":  1,
+                             "playback_probe_results":  [
+                                                            {
+                                                                "advanced":  true,
+                                                                "inconclusive":  false,
+                                                                "error":  null
+                                                            }
+                                                        ],
+                             "editable_underlay_preserved":  true
+                         },
+                   "8":  {
+                             "media_shape_count":  1,
+                             "expected_media_shape_count":  1,
+                             "media_is_linked":  false,
+                             "media_fills_slide":  true,
+                             "starts_automatically":  true,
+                             "play_on_entry":  true,
+                             "playback_position_advanced":  true,
+                             "playback_error":  null,
+                             "playback_probe_attempts":  1,
+                             "playback_probe_results":  [
+                                                            {
+                                                                "advanced":  true,
+                                                                "inconclusive":  false,
+                                                                "error":  null
+                                                            }
+                                                        ],
+                             "editable_underlay_preserved":  true
+                         },
+                   "9":  {
+                             "media_shape_count":  1,
+                             "expected_media_shape_count":  1,
+                             "media_is_linked":  false,
+                             "media_fills_slide":  true,
+                             "starts_automatically":  true,
+                             "play_on_entry":  true,
+                             "playback_position_advanced":  true,
+                             "playback_error":  null,
+                             "playback_probe_attempts":  1,
+                             "playback_probe_results":  [
+                                                            {
+                                                                "advanced":  true,
+                                                                "inconclusive":  false,
+                                                                "error":  null
+                                                            }
+                                                        ],
+                             "editable_underlay_preserved":  true
+                         },
+                   "10":  {
+                              "media_shape_count":  1,
+                              "expected_media_shape_count":  1,
+                              "media_is_linked":  false,
+                              "media_fills_slide":  true,
+                              "starts_automatically":  true,
+                              "play_on_entry":  true,
+                              "playback_position_advanced":  true,
+                              "playback_error":  null,
+                              "playback_probe_attempts":  1,
+                              "playback_probe_results":  [
+                                                             {
+                                                                 "advanced":  true,
+                                                                 "inconclusive":  false,
+                                                                 "error":  null
+                                                             }
+                                                         ],
+                              "editable_underlay_preserved":  true
+                          },
+                   "11":  {
+                              "media_shape_count":  1,
+                              "expected_media_shape_count":  1,
+                              "media_is_linked":  false,
+                              "media_fills_slide":  true,
+                              "starts_automatically":  true,
+                              "play_on_entry":  true,
+                              "playback_position_advanced":  true,
+                              "playback_error":  null,
+                              "playback_probe_attempts":  1,
+                              "playback_probe_results":  [
+                                                             {
+                                                                 "advanced":  true,
+                                                                 "inconclusive":  false,
+                                                                 "error":  null
+                                                             }
+                                                         ],
+                              "editable_underlay_preserved":  true
+                          },
+                   "12":  {
+                              "media_shape_count":  1,
+                              "expected_media_shape_count":  1,
+                              "media_is_linked":  false,
+                              "media_fills_slide":  true,
+                              "starts_automatically":  true,
+                              "play_on_entry":  true,
+                              "playback_position_advanced":  true,
+                              "playback_error":  null,
+                              "playback_probe_attempts":  1,
+                              "playback_probe_results":  [
+                                                             {
+                                                                 "advanced":  true,
+                                                                 "inconclusive":  false,
+                                                                 "error":  null
+                                                             }
+                                                         ],
+                              "editable_underlay_preserved":  true
+                          },
+                   "13":  {
+                              "media_shape_count":  1,
+                              "expected_media_shape_count":  1,
+                              "media_is_linked":  false,
+                              "media_fills_slide":  true,
+                              "starts_automatically":  true,
+                              "play_on_entry":  true,
+                              "playback_position_advanced":  true,
+                              "playback_error":  null,
+                              "playback_probe_attempts":  1,
+                              "playback_probe_results":  [
+                                                             {
+                                                                 "advanced":  true,
+                                                                 "inconclusive":  false,
+                                                                 "error":  null
+                                                             }
+                                                         ],
+                              "editable_underlay_preserved":  true
+                          },
+                   "14":  {
+                              "media_shape_count":  1,
+                              "expected_media_shape_count":  1,
+                              "media_is_linked":  false,
+                              "media_fills_slide":  true,
+                              "starts_automatically":  true,
+                              "play_on_entry":  true,
+                              "playback_position_advanced":  true,
+                              "playback_error":  null,
+                              "playback_probe_attempts":  1,
+                              "playback_probe_results":  [
+                                                             {
+                                                                 "advanced":  true,
+                                                                 "inconclusive":  false,
+                                                                 "error":  null
+                                                             }
+                                                         ],
+                              "editable_underlay_preserved":  true
+                          },
+                   "15":  {
+                              "media_shape_count":  1,
+                              "expected_media_shape_count":  1,
+                              "media_is_linked":  false,
+                              "media_fills_slide":  true,
+                              "starts_automatically":  true,
+                              "play_on_entry":  true,
+                              "playback_position_advanced":  true,
+                              "playback_error":  null,
+                              "playback_probe_attempts":  1,
+                              "playback_probe_results":  [
+                                                             {
+                                                                 "advanced":  true,
+                                                                 "inconclusive":  false,
+                                                                 "error":  null
+                                                             }
+                                                         ],
+                              "editable_underlay_preserved":  true
+                          }
+               }
+}

@@ -1,0 +1,31 @@
+Here is a distinction that will matter throughout the lecture.
+
+Sunlight, wind, and flowing water are flow resources.
+
+They arrive as nature provides them.
+
+If sunlight is hitting a solar panel right now, we can use it, convert it, store the resulting electricity, export it, or let it go unused.
+
+But we cannot save today's sunlight at the source for tomorrow.
+
+Fuels behave differently.
+
+Natural gas, coal, and uranium are stock resources.
+
+The stored resource can be drawn upon when needed.
+
+That does not mean flow resources are uncontrollable.
+
+We can control the equipment connected to them, and we can combine them with storage and flexible demand.
+
+It simply means the underlying resource arrives according to natural conditions.
+
+Reservoir hydropower is an interesting hybrid case.
+
+Water is part of a renewable flow, but once it is stored behind a dam, the operator gains some stock-like flexibility over when that energy is released.
+
+So the important difference is not simply renewable versus nonrenewable.
+
+It is how the resource behaves in time, and how much operational control the system has over it.
+
+And before we worry about managing those flows, it is worth seeing just how large they are.

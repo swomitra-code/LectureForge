@@ -1,0 +1,21 @@
+Not every storage problem needs the same technology.
+
+Lithium-ion batteries are widely used for many short-duration and intraday applications.
+
+If I want to move solar energy from noon into the evening peak, lithium-ion may be a very good fit.
+
+But suppose I want to cover a much longer gap, perhaps many hours or even several days of low renewable production.
+
+Simply building a much larger version of the same short-duration battery may not always be the best technical or economic solution.
+
+Flow batteries, pumped-storage hydropower, compressed-air systems, and thermal storage can address different duration and scale requirements.
+
+And when we move toward very long-duration or seasonal storage, chemical pathways such as hydrogen become more interesting.
+
+The important lesson is not to memorize a rigid duration range for every technology.
+
+The ranges overlap.
+
+The right choice depends on required power, total energy, duration, geography, efficiency, cost, response time, and the service the system must provide.
+
+Storage selection is really an application-matching problem.

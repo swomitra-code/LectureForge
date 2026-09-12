@@ -1,0 +1,9 @@
+Before looking closely, make a prediction. If the total energy system still contains so much fossil fuel use, do you think electricity generation has changed by the same amount, less, or more?
+
+<break time="2.5s" />
+
+Now look at the graph. The picture changes dramatically. Coal falls sharply, natural gas becomes central, renewables take a much larger role, and nuclear remains comparatively steady.
+
+This is the conceptual pivot of the module: electricity is not the same thing as energy.
+
+A major transformation in the power sector can coexist with a much slower transformation in the total energy system.

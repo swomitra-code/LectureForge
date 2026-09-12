@@ -1,0 +1,11 @@
+These two panels look similar enough that it is tempting to treat them as the same story. They are not.
+
+The production panel asks: what energy does the United States produce?
+
+The consumption panel asks: what energy does the country use?
+
+The gap between those questions is where imports, exports, fuel types, infrastructure, and markets enter the story.
+
+So when you encounter an energy graph, one of your first questions should be: am I looking at production, consumption, or electricity generation?
+
+That question often determines whether the interpretation is correct.

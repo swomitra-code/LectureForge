@@ -1,0 +1,39 @@
+Here is one reasonable way the day could unfold.
+
+Early in the morning, solar is near zero.
+
+Stored energy, dispatchable generation, or a combination of the two has to support the load.
+
+As the sun rises, solar begins serving more of the demand.
+
+If renewable generation becomes large enough, the dispatchable generator can reduce output and the battery can stop discharging.
+
+Around midday, solar exceeds the load.
+
+That surplus can charge the battery, so state of charge rises.
+
+Notice what happens next.
+
+Solar output begins to decline, but demand climbs toward the evening peak.
+
+The battery reverses direction and starts discharging.
+
+Stored energy from earlier in the day is now helping support evening demand.
+
+By late night, the battery has less energy remaining.
+
+If state of charge approaches its lower operating limit and demand is still present, dispatchable generation may need to increase again.
+
+You could imagine other valid strategies.
+
+Maybe we shift more flexible demand into midday.
+
+Maybe we preserve more battery energy for the evening.
+
+Maybe we curtail some solar if the battery fills up.
+
+The important point is that the system is coordinating resources across time.
+
+This is not the only correct operating strategy.
+
+It is one example under a particular set of assumptions.

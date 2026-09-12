@@ -1,0 +1,29 @@
+Variable renewables make the control problem more interesting because generation does not automatically follow demand.
+
+Imagine a clear morning.
+
+Solar output starts low, rises quickly, and eventually becomes larger than the load.
+
+Early in the morning, the system may rely on storage, imports, or dispatchable generation.
+
+As solar increases, those resources can back down.
+
+By midday, the situation may reverse.
+
+Now renewable generation exceeds demand.
+
+The system has several valid choices.
+
+It can charge storage.
+
+It can export electricity.
+
+It can move flexible loads into that period.
+
+Or, if none of those options is attractive, it can curtail some generation.
+
+Then, a few hours later, the system can move back into shortfall as solar declines and demand rises.
+
+So this is not about finding one permanently correct operating mode.
+
+It is about moving intelligently between operating modes as conditions change.

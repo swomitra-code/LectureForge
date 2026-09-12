@@ -1,0 +1,27 @@
+Now we reach one of the central operating problems in renewable-heavy systems.
+
+Solar generation tends to be strongest around midday.
+
+Electricity demand, depending on the system, may remain high into the evening after solar output has already fallen.
+
+Look at the green and blue curves.
+
+Around midday, we may have more solar generation than the load needs.
+
+A few hours later, we can have the opposite problem.
+
+<break time="1.0s" />
+
+This pattern is often associated with what people call the duck curve, especially in systems with high solar penetration.
+
+The exact shape varies by region and season, but the engineering challenge is the same.
+
+Supply and demand do not naturally line up in time.
+
+So here is the question.
+
+How do we move from a midday surplus to an evening shortfall?
+
+That one mismatch motivates several of the tools we are about to discuss.
+
+Storage, flexible demand, dispatchable generation, and better control.

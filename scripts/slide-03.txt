@@ -1,0 +1,11 @@
+Before looking at any data, pause for a moment. If I asked you to picture renewable energy in the United States, what would you see first?
+
+<break time="2.5s" />
+
+Most people immediately think of wind turbines or solar panels. Those are important, but they are only pieces of a much larger system that also includes hydropower, bioenergy, geothermal energy, nuclear power, fossil fuels, and all of the infrastructure connecting production to use.
+
+Now make one more prediction: which renewable source do you think has changed the most over the past few decades?
+
+<break time="2.5s" />
+
+Keep that prediction in mind. The next few graphs may challenge parts of the picture you started with.

@@ -1,0 +1,21 @@
+If you remember one habit from this module, make it this.
+
+When you look at an energy system, do not ask only how much energy is available.
+
+Ask when it is available.
+
+Ask when it is needed.
+
+And ask what the system can do when those two do not match.
+
+Renewable resources are often flow-limited.
+
+Storage shifts energy through time.
+
+Flexible demand changes when some energy is needed.
+
+Dispatchable resources can fill gaps.
+
+And the E-M-S coordinates those decisions while the electrical network carries the power.
+
+That is the problem energy management is trying to solve.

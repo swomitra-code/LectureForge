@@ -1,0 +1,11 @@
+Before we talk about particular renewable technologies, I want to start with a more basic engineering question.
+
+What does it actually take to run an energy system well?
+
+Imagine that you are responsible for keeping a small community, campus, or critical facility supplied with energy for an entire day.
+
+The weather changes. Demand changes. Equipment has limits. Costs matter. Reliability matters.
+
+This module is about the decisions that connect all of those pieces.
+
+That is the job of energy management.

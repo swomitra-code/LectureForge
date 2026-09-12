@@ -1,0 +1,31 @@
+Energy management is not simply about pushing as much energy as possible through the system.
+
+The system takes energy from a source, converts and delivers it, and ultimately uses it to provide some service.
+
+Along the way, there are losses and operating constraints.
+
+The management layer sits above that physical process.
+
+It observes what is happening, compares conditions with our objectives, and adjusts controllable equipment.
+
+Consider a battery connected to a microgrid.
+
+The controller might know the battery is at thirty-five percent state of charge, solar output is falling, evening demand is rising, and the generator has a minimum operating limit.
+
+It may also have a forecast showing that demand will stay high for the next two hours.
+
+Based on those conditions, the controller could command the battery to discharge at a certain power level, delay a flexible load, or start the dispatchable generator.
+
+Notice what the controller is doing.
+
+It is making and communicating decisions.
+
+The controller itself does not carry the energy.
+
+The electrical system does.
+
+That distinction matters because it separates the physical energy path from the decision-making layer.
+
+So how does a controller know when to act?
+
+The simplest answer is feedback.

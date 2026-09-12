@@ -1,0 +1,62 @@
+﻿{
+    "output_deck":  "C:\\Users\\swomi\\Dropbox\\Undergradaute Affairs\\AI Education PCE\\LectureForge\\LectureForge_Codex_Pilot_Bundle\\output\\Module1_Energy_Landscape_VIDEO_SLIDES_10_12.pptx",
+    "reopened_in_powerpoint":  true,
+    "source_slide_count":  15,
+    "output_slide_counts":  [
+                                15,
+                                15,
+                                15
+                            ],
+    "slide_count_unchanged":  true,
+    "approved_slide_10_preserved":  true,
+    "editable_underlays_verified":  [
+                                        10,
+                                        11,
+                                        12
+                                    ],
+    "editable_underlays_preserved":  true,
+    "unrelated_slides_verified":  [
+                                      1,
+                                      2,
+                                      3,
+                                      4,
+                                      5,
+                                      6,
+                                      7,
+                                      8,
+                                      9,
+                                      13,
+                                      14,
+                                      15
+                                  ],
+    "unrelated_slides_unchanged":  true,
+    "slides":  {
+                   "10":  {
+                              "embedded_media_shape_count":  1,
+                              "media_is_linked":  false,
+                              "media_fills_slide":  true,
+                              "starts_automatically":  true,
+                              "play_on_entry":  true,
+                              "playback_position_advanced":  true,
+                              "playback_error":  null
+                          },
+                   "11":  {
+                              "embedded_media_shape_count":  1,
+                              "media_is_linked":  false,
+                              "media_fills_slide":  true,
+                              "starts_automatically":  true,
+                              "play_on_entry":  true,
+                              "playback_position_advanced":  true,
+                              "playback_error":  null
+                          },
+                   "12":  {
+                              "embedded_media_shape_count":  1,
+                              "media_is_linked":  false,
+                              "media_fills_slide":  true,
+                              "starts_automatically":  true,
+                              "play_on_entry":  true,
+                              "playback_position_advanced":  true,
+                              "playback_error":  null
+                          }
+               }
+}

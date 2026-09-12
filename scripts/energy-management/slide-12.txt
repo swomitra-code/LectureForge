@@ -1,0 +1,27 @@
+Now let's put the pieces together.
+
+Here we have renewable generation, a battery, a dispatchable generator, critical and flexible loads, and a utility-grid connection tied to an electrical power bus.
+
+The green connections represent electrical power.
+
+That is where the energy physically flows.
+
+Above the power system is the Energy Management System, or E-M-S.
+
+The dashed blue lines represent information and control.
+
+What does the E-M-S actually see?
+
+It may receive measurements of power flow, voltage, battery state of charge, generator status, load demand, and renewable output.
+
+It may also receive forecasts for solar production and expected demand.
+
+Then it sends commands or setpoints back to the equipment.
+
+For example, it might tell the battery inverter to discharge at twenty megawatts, tell a flexible load to delay operation, or command the generator to start because the battery is approaching its lower state-of-charge limit.
+
+That separation is important.
+
+Power flows through the electrical network, while decisions and information flow through the control layer.
+
+Once the E-M-S knows storage is needed, the next question becomes, what kind of storage fits the job?

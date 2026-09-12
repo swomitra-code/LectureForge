@@ -1,0 +1,29 @@
+Now I want you to operate the system.
+
+Imagine an islanded microgrid with solar generation, a battery, a dispatchable generator, critical loads, and some flexible loads.
+
+There is no grid import or export, and the battery begins the day partially charged.
+
+Start in the early morning.
+
+Solar is not yet producing much.
+
+What should supply the load?
+
+At midday, solar becomes abundant.
+
+Should the battery charge?
+
+Should flexible demand move into this period?
+
+Could curtailment ever make sense?
+
+Then comes the evening peak, after solar falls.
+
+Which resources should respond first?
+
+And finally, late at night, what happens if the battery is running low?
+
+<break time="2.5s" />
+
+Make a prediction before we look at one possible operating strategy.

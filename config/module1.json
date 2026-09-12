@@ -1,0 +1,351 @@
+﻿{
+    "source_pptx":  "../source/Renewable-Energy-Module-1-Energy-Management.pptx",
+    "output_pptx":  "../output/Module1_Energy_Management_COMPLETE.pptx",
+    "output_media_dir":  "../output/energy-management-media",
+    "defaults":  {
+                     "presenter":  {
+                                       "crop":  {
+                                                    "width":  640,
+                                                    "height":  620,
+                                                    "x":  870,
+                                                    "y":  80
+                                                },
+                                       "scale":  {
+                                                     "width":  280,
+                                                     "height":  271
+                                                 },
+                                       "position":  {
+                                                        "x":  1620,
+                                                        "y":  430
+                                                    }
+                                   },
+                     "narration":  {
+                                       "voice_id":  "PqwAVcrzgTuCTbgkDpWl",
+                                       "model_id":  "eleven_multilingual_v2",
+                                       "output_dir":  "../media/energy-management",
+                                       "stability":  0.34,
+                                       "similarity_boost":  0.8,
+                                       "style":  0.5,
+                                       "use_speaker_boost":  true,
+                                       "speed":  1
+                                   },
+                     "avatar_generation":  {
+                                               "avatar_name":  "SKM-BLUE-7",
+                                               "avatar_id":  "f04bc24f9fd7480885c266c4f1d71f98",
+                                               "output_dir":  "../media/energy-management",
+                                               "remove_background":  true,
+                                               "output_format":  "webm",
+                                               "aspect_ratio":  "16:9",
+                                               "resolution":  "1080p",
+                                               "burn_captions":  false
+                                           }
+                 },
+    "slides":  [
+                   {
+                       "slide_number":  1,
+                       "enabled":  true,
+                       "avatar_webm":  "media/energy-management/slide-1-SKM-BLUE-7-production-transparent.webm",
+                       "avatar_generation":  {
+                                                 "enabled":  true
+                                             },
+                       "narration":  {
+                                         "enabled":  true,
+                                         "speech_script":  "../scripts/energy-management/slide-01.txt",
+                                         "generated_takes":  [
+                                                                 "../media/energy-management/slide-1-take-1.mp3",
+                                                                 "../media/energy-management/slide-1-take-2.mp3",
+                                                                 "../media/energy-management/slide-1-take-3.mp3"
+                                                             ],
+                                         "instructor_selected_take":  "media/energy-management/slide-1-take-1.mp3"
+                                     }
+                   },
+                   {
+                       "slide_number":  2,
+                       "enabled":  true,
+                       "avatar_webm":  "media/energy-management/slide-2-SKM-BLUE-7-production-transparent.webm",
+                       "avatar_generation":  {
+                                                 "enabled":  true
+                                             },
+                       "narration":  {
+                                         "enabled":  true,
+                                         "speech_script":  "../scripts/energy-management/slide-02.txt",
+                                         "generated_takes":  [
+                                                                 "../media/energy-management/slide-2-take-1.mp3",
+                                                                 "../media/energy-management/slide-2-take-2.mp3",
+                                                                 "../media/energy-management/slide-2-take-3.mp3"
+                                                             ],
+                                         "instructor_selected_take":  "media/energy-management/slide-2-take-3.mp3"
+                                     }
+                   },
+                   {
+                       "slide_number":  3,
+                       "enabled":  true,
+                       "avatar_webm":  "media/energy-management/slide-3-SKM-BLUE-7-production-transparent.webm",
+                       "avatar_generation":  {
+                                                 "enabled":  true
+                                             },
+                       "narration":  {
+                                         "enabled":  true,
+                                         "speech_script":  "../scripts/energy-management/slide-03.txt",
+                                         "generated_takes":  [
+                                                                 "../media/energy-management/slide-3-take-1.mp3",
+                                                                 "../media/energy-management/slide-3-take-2.mp3",
+                                                                 "../media/energy-management/slide-3-take-3.mp3"
+                                                             ],
+                                         "instructor_selected_take":  "media/energy-management/slide-3-take-2.mp3"
+                                     }
+                   },
+                   {
+                       "slide_number":  4,
+                       "enabled":  true,
+                       "avatar_webm":  "media/energy-management/slide-4-SKM-BLUE-7-production-transparent.webm",
+                       "avatar_generation":  {
+                                                 "enabled":  true
+                                             },
+                       "narration":  {
+                                         "enabled":  true,
+                                         "speech_script":  "../scripts/energy-management/slide-04.txt",
+                                         "generated_takes":  [
+                                                                 "../media/energy-management/slide-4-take-1.mp3",
+                                                                 "../media/energy-management/slide-4-take-2.mp3",
+                                                                 "../media/energy-management/slide-4-take-3.mp3"
+                                                             ],
+                                         "instructor_selected_take":  "media/energy-management/slide-4-take-1.mp3"
+                                     }
+                   },
+                   {
+                       "slide_number":  5,
+                       "enabled":  true,
+                       "avatar_webm":  "media/energy-management/slide-5-SKM-BLUE-7-production-transparent.webm",
+                       "avatar_generation":  {
+                                                 "enabled":  true
+                                             },
+                       "narration":  {
+                                         "enabled":  true,
+                                         "speech_script":  "../scripts/energy-management/slide-05.txt",
+                                         "generated_takes":  [
+                                                                 "../media/energy-management/slide-5-take-1.mp3",
+                                                                 "../media/energy-management/slide-5-take-2.mp3",
+                                                                 "../media/energy-management/slide-5-take-3.mp3"
+                                                             ],
+                                         "instructor_selected_take":  "media/energy-management/slide-5-take-2.mp3"
+                                     }
+                   },
+                   {
+                       "slide_number":  6,
+                       "enabled":  true,
+                       "avatar_webm":  "media/energy-management/slide-6-SKM-BLUE-7-production-transparent.webm",
+                       "avatar_generation":  {
+                                                 "enabled":  true
+                                             },
+                       "narration":  {
+                                         "enabled":  true,
+                                         "speech_script":  "../scripts/energy-management/slide-06.txt",
+                                         "generated_takes":  [
+                                                                 "../media/energy-management/slide-6-take-1.mp3",
+                                                                 "../media/energy-management/slide-6-take-2.mp3",
+                                                                 "../media/energy-management/slide-6-take-3.mp3"
+                                                             ],
+                                         "instructor_selected_take":  "media/energy-management/slide-6-take-1.mp3"
+                                     }
+                   },
+                   {
+                       "slide_number":  7,
+                       "enabled":  true,
+                       "avatar_webm":  "media/energy-management/slide-7-SKM-BLUE-7-production-transparent.webm",
+                       "avatar_generation":  {
+                                                 "enabled":  true
+                                             },
+                       "narration":  {
+                                         "enabled":  true,
+                                         "speech_script":  "../scripts/energy-management/slide-07.txt",
+                                         "generated_takes":  [
+                                                                 "../media/energy-management/slide-7-take-1.mp3",
+                                                                 "../media/energy-management/slide-7-take-2.mp3",
+                                                                 "../media/energy-management/slide-7-take-3.mp3"
+                                                             ],
+                                         "instructor_selected_take":  "media/energy-management/slide-7-take-3.mp3"
+                                     }
+                   },
+                   {
+                       "slide_number":  8,
+                       "enabled":  true,
+                       "avatar_webm":  "media/energy-management/slide-8-SKM-BLUE-7-production-transparent.webm",
+                       "avatar_generation":  {
+                                                 "enabled":  true
+                                             },
+                       "narration":  {
+                                         "enabled":  true,
+                                         "speech_script":  "../scripts/energy-management/slide-08.txt",
+                                         "generated_takes":  [
+                                                                 "../media/energy-management/slide-8-take-1.mp3",
+                                                                 "../media/energy-management/slide-8-take-2.mp3",
+                                                                 "../media/energy-management/slide-8-take-3.mp3"
+                                                             ],
+                                         "instructor_selected_take":  "media/energy-management/slide-8-take-3.mp3"
+                                     }
+                   },
+                   {
+                       "slide_number":  9,
+                       "enabled":  true,
+                       "avatar_webm":  "media/energy-management/slide-9-SKM-BLUE-7-production-transparent.webm",
+                       "avatar_generation":  {
+                                                 "enabled":  true
+                                             },
+                       "narration":  {
+                                         "enabled":  true,
+                                         "speech_script":  "../scripts/energy-management/slide-09.txt",
+                                         "generated_takes":  [
+                                                                 "../media/energy-management/slide-9-take-1.mp3",
+                                                                 "../media/energy-management/slide-9-take-2.mp3",
+                                                                 "../media/energy-management/slide-9-take-3.mp3"
+                                                             ],
+                                         "instructor_selected_take":  "media/energy-management/slide-9-take-3.mp3"
+                                     }
+                   },
+                   {
+                       "slide_number":  10,
+                       "enabled":  true,
+                       "avatar_webm":  "media/energy-management/slide-10-SKM-BLUE-7-production-transparent.webm",
+                       "avatar_generation":  {
+                                                 "enabled":  true
+                                             },
+                       "narration":  {
+                                         "enabled":  true,
+                                         "speech_script":  "../scripts/energy-management/slide-10.txt",
+                                         "generated_takes":  [
+                                                                 "../media/energy-management/slide-10-take-1.mp3",
+                                                                 "../media/energy-management/slide-10-take-2.mp3",
+                                                                 "../media/energy-management/slide-10-take-3.mp3"
+                                                             ],
+                                         "instructor_selected_take":  "media/energy-management/slide-10-take-2.mp3"
+                                     }
+                   },
+                   {
+                       "slide_number":  11,
+                       "enabled":  true,
+                       "avatar_webm":  "media/energy-management/slide-11-SKM-BLUE-7-production-transparent.webm",
+                       "avatar_generation":  {
+                                                 "enabled":  true
+                                             },
+                       "narration":  {
+                                         "enabled":  true,
+                                         "speech_script":  "../scripts/energy-management/slide-11.txt",
+                                         "generated_takes":  [
+                                                                 "../media/energy-management/slide-11-take-1.mp3",
+                                                                 "../media/energy-management/slide-11-take-2.mp3",
+                                                                 "../media/energy-management/slide-11-take-3.mp3"
+                                                             ],
+                                         "instructor_selected_take":  "media/energy-management/slide-11-take-2.mp3"
+                                     }
+                   },
+                   {
+                       "slide_number":  12,
+                       "enabled":  true,
+                       "avatar_webm":  "media/energy-management/slide-12-SKM-BLUE-7-production-transparent.webm",
+                       "avatar_generation":  {
+                                                 "enabled":  true
+                                             },
+                       "narration":  {
+                                         "enabled":  true,
+                                         "speech_script":  "../scripts/energy-management/slide-12.txt",
+                                         "generated_takes":  [
+                                                                 "../media/energy-management/slide-12-take-1.mp3",
+                                                                 "../media/energy-management/slide-12-take-2.mp3",
+                                                                 "../media/energy-management/slide-12-take-3.mp3"
+                                                             ],
+                                         "instructor_selected_take":  "media/energy-management/slide-12-take-2.mp3"
+                                     }
+                   },
+                   {
+                       "slide_number":  13,
+                       "enabled":  true,
+                       "avatar_webm":  "media/energy-management/slide-13-SKM-BLUE-7-production-transparent.webm",
+                       "avatar_generation":  {
+                                                 "enabled":  true
+                                             },
+                       "narration":  {
+                                         "enabled":  true,
+                                         "speech_script":  "../scripts/energy-management/slide-13.txt",
+                                         "generated_takes":  [
+                                                                 "../media/energy-management/slide-13-take-1.mp3",
+                                                                 "../media/energy-management/slide-13-take-2.mp3",
+                                                                 "../media/energy-management/slide-13-take-3.mp3"
+                                                             ],
+                                         "instructor_selected_take":  "media/energy-management/slide-13-take-3.mp3"
+                                     }
+                   },
+                   {
+                       "slide_number":  14,
+                       "enabled":  true,
+                       "avatar_webm":  "media/energy-management/slide-14-SKM-BLUE-7-production-transparent.webm",
+                       "avatar_generation":  {
+                                                 "enabled":  true
+                                             },
+                       "narration":  {
+                                         "enabled":  true,
+                                         "speech_script":  "../scripts/energy-management/slide-14.txt",
+                                         "generated_takes":  [
+                                                                 "../media/energy-management/slide-14-take-1.mp3",
+                                                                 "../media/energy-management/slide-14-take-2.mp3",
+                                                                 "../media/energy-management/slide-14-take-3.mp3"
+                                                             ],
+                                         "instructor_selected_take":  "media/energy-management/slide-14-take-2.mp3"
+                                     }
+                   },
+                   {
+                       "slide_number":  15,
+                       "enabled":  true,
+                       "avatar_webm":  "media/energy-management/slide-15-SKM-BLUE-7-production-transparent.webm",
+                       "avatar_generation":  {
+                                                 "enabled":  true
+                                             },
+                       "narration":  {
+                                         "enabled":  true,
+                                         "speech_script":  "../scripts/energy-management/slide-15.txt",
+                                         "generated_takes":  [
+                                                                 "../media/energy-management/slide-15-take-1.mp3",
+                                                                 "../media/energy-management/slide-15-take-2.mp3",
+                                                                 "../media/energy-management/slide-15-take-3.mp3"
+                                                             ],
+                                         "instructor_selected_take":  "media/energy-management/slide-15-take-2.mp3"
+                                     }
+                   },
+                   {
+                       "slide_number":  16,
+                       "enabled":  true,
+                       "avatar_webm":  "media/energy-management/slide-16-SKM-BLUE-7-production-transparent.webm",
+                       "avatar_generation":  {
+                                                 "enabled":  true
+                                             },
+                       "narration":  {
+                                         "enabled":  true,
+                                         "speech_script":  "../scripts/energy-management/slide-16.txt",
+                                         "generated_takes":  [
+                                                                 "../media/energy-management/slide-16-take-1.mp3",
+                                                                 "../media/energy-management/slide-16-take-2.mp3",
+                                                                 "../media/energy-management/slide-16-take-3.mp3"
+                                                             ],
+                                         "instructor_selected_take":  "media/energy-management/slide-16-take-1.mp3"
+                                     }
+                   },
+                   {
+                       "slide_number":  17,
+                       "enabled":  true,
+                       "avatar_webm":  "media/energy-management/slide-17-SKM-BLUE-7-production-transparent.webm",
+                       "avatar_generation":  {
+                                                 "enabled":  true
+                                             },
+                       "narration":  {
+                                         "enabled":  true,
+                                         "speech_script":  "../scripts/energy-management/slide-17.txt",
+                                         "generated_takes":  [
+                                                                 "../media/energy-management/slide-17-take-1.mp3",
+                                                                 "../media/energy-management/slide-17-take-2.mp3",
+                                                                 "../media/energy-management/slide-17-take-3.mp3"
+                                                             ],
+                                         "instructor_selected_take":  "media/energy-management/slide-17-take-2.mp3"
+                                     }
+                   }
+               ]
+}

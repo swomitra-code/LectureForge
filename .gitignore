@@ -1,0 +1,41 @@
+# Required local binary inputs and generated provider assets
+/source/*.pptx
+/media/
+
+# Render intermediates
+/work/
+
+# Generated deliverables; preserve existing validation evidence
+/output/*
+!/output/*.json
+
+# Local provider job history
+/heygen-video-log.jsonl
+
+# Credentials and local environment configuration
+.env
+.env.*
+!.env.example
+/secrets/
+/credentials/
+*.pem
+*.key
+*.pfx
+*.p12
+
+# Caches and local dependencies
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+node_modules/
+.cache/
+
+# Office and operating-system temporary files
+~$*
+*.tmp
+Thumbs.db
+Desktop.ini
+.DS_Store

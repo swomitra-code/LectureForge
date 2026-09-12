@@ -1,0 +1,5 @@
+When people talk about the energy transition, it can sound as though there is one simple story: fossil fuels are going down and renewables are going up. But the real U.S. energy system is much more interesting than that. Electricity tells one story, total energy use tells another, and production and consumption can move in different directions.
+
+In this module, we are going to use the data to answer three larger questions. What is actually changing in the U.S. energy system? Why do different energy statistics sometimes appear to tell different stories? And how should we compare different energy pathways?
+
+By the end, I want you to be able to look at an energy claim and ask better questions before accepting the conclusion.

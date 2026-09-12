@@ -1,0 +1,11 @@
+We can now reduce the whole lecture to two broad operating situations.
+
+When energy is abundant, we can use it, store it, export it, shift flexible demand into that period, or sometimes curtail it.
+
+When energy is limited, we can discharge storage, reduce or shift flexible demand, activate dispatchable generation, and protect critical loads.
+
+There is no single response that is always correct.
+
+Good energy management means matching resources, demand, and system objectives across time while respecting the constraints of the real system.
+
+That is why the word I keep coming back to is coordination.

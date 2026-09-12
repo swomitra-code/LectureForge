@@ -1,0 +1,7 @@
+A chart like this can make E. R. O. I. look like a simple scoreboard: one technology gets a high number, another gets a lower number, and we declare a winner.
+
+But that would be too easy.
+
+The estimated value depends on where we draw the system boundary, which energy inputs we count, the technology vintage, resource quality, location, and other assumptions.
+
+So the useful lesson is not that one historical value settles the comparison. The lesson is that every energy pathway requires an energy investment, and a reported E. R. O. I. value only makes sense when we understand how it was calculated.

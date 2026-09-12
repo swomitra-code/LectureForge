@@ -1,0 +1,24 @@
+Read AGENTS.md and BUILD_SPEC.md first.
+
+Build and validate the Slide 10 golden path on this Windows PC. Do not start Slides 11 or 12 yet.
+
+First inspect the environment and report whether Codex, Git, Python, FFmpeg, Microsoft PowerPoint desktop, and PowerPoint COM automation are available. Create a local Python virtual environment if useful. You may install Python packages into that local environment, but do not install or modify system-wide software without asking.
+
+Then implement the smallest pipeline that:
+- uses the existing source deck in source/,
+- uses the approved Slide 10 SKM-BLUE-7 WebM in media/,
+- renders Slide 10,
+- preserves WebM alpha while reducing green spill around hair,
+- crops from top of head to just below shoulders,
+- places presenter small in lower-right without obscuring slide content,
+- preserves the exact existing narration audio,
+- creates a 1920x1080 H.264/AAC MP4,
+- copies the original PPTX,
+- embeds that MP4 over full Slide 10 using desktop PowerPoint so it is stored inside the PPTX rather than linked,
+- sets playback to start automatically,
+- saves the separate MP4 and new PPTX in output/,
+- closes and reopens PowerPoint and validates the real output.
+
+Do not add subjective narration QA, a state machine, web interface, database, cloud services, or generalized multi-slide architecture yet.
+
+If anything fails, fix only the demonstrated cause. Do not claim success until the generated PPTX has been reopened in desktop PowerPoint and the embedded Slide 10 video has been verified.

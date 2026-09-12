@@ -1,0 +1,82 @@
+{
+  "production_reference": {
+    "status": "locked",
+    "approved_slide": 10,
+    "architecture": "render editable slide, composite approved alpha avatar, encode full-slide MP4, embed MP4 over original slide"
+  },
+  "deck": "source/Module1_Energy_Landscape_2026_Refresh_Cleaned_No_Old_Photo_FINAL2.pptx",
+  "output_deck": "output/Module1_Energy_Landscape_VIDEO_PILOT.pptx",
+  "defaults": {
+    "render": {
+      "width": 1920,
+      "height": 1080,
+      "format": "PNG",
+      "frame_rate": 30
+    },
+    "ffmpeg": {
+      "alpha_decoder": "libvpx-vp9",
+      "preserve_alpha_during_despill": true,
+      "despill": {
+        "type": "green",
+        "mix": 0.30,
+        "expand": 0.05,
+        "modify_alpha": false
+      },
+      "presenter_crop": {
+        "width": 640,
+        "height": 620,
+        "x": 870,
+        "y": 80
+      },
+      "presenter_scale": {
+        "width": 280,
+        "height": 271,
+        "filter": "lanczos"
+      },
+      "presenter_position": {
+        "x": 1620,
+        "y": 430
+      },
+      "video": {
+        "codec": "libx264",
+        "preset": "medium",
+        "crf": 18,
+        "pixel_format": "yuv420p",
+        "frame_rate": 30,
+        "faststart": true
+      },
+      "audio": {
+        "source": "approved avatar media audio stream",
+        "regenerate": false,
+        "codec": "aac",
+        "bitrate": "192k",
+        "sample_rate": 48000,
+        "channels": 2
+      }
+    },
+    "powerpoint": {
+      "embed": true,
+      "link_to_file": false,
+      "save_with_document": true,
+      "video_left": 0,
+      "video_top": 0,
+      "video_width": "full-slide",
+      "video_height": "full-slide",
+      "preserve_editable_slide_underneath": true,
+      "autoplay": true,
+      "media_play_effect": 83,
+      "autoplay_trigger": 2,
+      "close_reopen_validate": true,
+      "playback_probe_seconds": 2
+    }
+  },
+  "slides": {
+    "10": {
+      "avatar_video": "media/Module_1_Slide_10_-_Take_2_-_SKM-BLUE-7.webm",
+      "output_video": "output/slide-10-final.mp4",
+      "rendered_slide": "work/slide-10.png",
+      "validation_report": "output/validation-slide10.json",
+      "approved": true
+    }
+  }
+}
