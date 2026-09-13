@@ -11,6 +11,9 @@ Copy-Item -LiteralPath $template -Destination $dir -Recurse
 $p=Get-Content -Raw -Encoding UTF8 (Join-Path $dir 'project.json')|ConvertFrom-Json
 $p.id=$id;$p.name='Solar Thermal - Milestone C authorization COPY'
 Write-LFJson (Join-Path $dir 'project.json') $p
+# Test C independently of the D consumer: pause this fixture queue before startup.
+Write-LFJson (Join-Path $dir 'avatar-queue.json') @{schema='lectureforge-avatar-queue-1';paused=$true;batches=@();jobs=@()}
+Write-LFJson (Join-Path $root 'avatar-policy.json') @{provider_calls_enabled=$false}
 $checks=[Collections.Generic.List[object]]::new()
 function Check($Name,[bool]$Passed){$checks.Add(@{name=$Name;passed=$Passed});if(-not $Passed){throw "FAILED: $Name"};Write-Output "PASS: $Name"}
 function Current {Get-LFSelectionReview $root $id}

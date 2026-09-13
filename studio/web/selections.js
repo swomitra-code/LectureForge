@@ -52,7 +52,7 @@ $('authorize-preview').onclick=()=>action(async()=>{
 $('confirm-avatars').onclick=()=>action(async()=>{
  if(selectionBusy)return;selectionBusy=true;renderSelectionReview();
  const id=project.id,reviewId=selectionReview.review.id;
- try{await request('/api/avatar-authorize?id='+id,{confirm:true,review_id:reviewId,expected:reviewId});await loadSelectionReview();message('Avatar generation authorized — waiting for production worker. No provider jobs were submitted.');}finally{selectionBusy=false;renderSelectionReview();}
+ try{await request('/api/avatar-authorize?id='+id,{confirm:true,review_id:reviewId,expected:reviewId});await loadSelectionReview();if(typeof loadAvatarStatus==='function')await loadAvatarStatus();message('Avatar generation authorized — waiting for production worker. Background production will now begin.');}finally{selectionBusy=false;renderSelectionReview();}
 });
 $('cancel-confirmation').onclick=()=>action(reviewSelections);
 setInterval(async()=>{

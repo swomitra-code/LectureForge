@@ -12,6 +12,14 @@ function Write-LFJson([string]$Path,$Value){
  [IO.File]::WriteAllText($tmp,$json,[Text.UTF8Encoding]::new($false))
  if([IO.File]::Exists($Path)){[IO.File]::Replace($tmp,$Path,[NullString]::Value)}else{[IO.File]::Move($tmp,$Path)}
 }
+function Read-LFSharedJson([string]$Path){
+ for($attempt=0;$attempt -lt 20;$attempt++){
+  try{
+   $stream=[IO.File]::Open($Path,[IO.FileMode]::Open,[IO.FileAccess]::Read,([IO.FileShare]::ReadWrite -bor [IO.FileShare]::Delete))
+   try{$reader=[IO.StreamReader]::new($stream,[Text.Encoding]::UTF8);try{return ($reader.ReadToEnd()|ConvertFrom-Json)}finally{$reader.Dispose()}}finally{$stream.Dispose()}
+  }catch [IO.IOException]{if($attempt -eq 19){throw};Start-Sleep -Milliseconds 25}
+ }
+}
 function Get-LFProjectPath([string]$Root,[string]$Id){
  if($Id -notmatch '^[a-f0-9]{12}$'){throw 'Invalid project ID.'}
  Join-Path (Join-Path (Get-LFRoot $Root) 'Projects') $Id
@@ -89,4 +97,4 @@ function Get-LFProjects([string]$Root){
  $dir=Join-Path (Get-LFRoot $Root) 'Projects'
  if(Test-Path $dir){foreach($f in Get-ChildItem -LiteralPath $dir -Directory){if($f.Name -match '^[a-f0-9]{12}$' -and (Test-Path (Join-Path $f.FullName 'project.json'))){$p=Get-Content -Encoding UTF8 -Raw (Join-Path $f.FullName 'project.json')|ConvertFrom-Json;[pscustomobject]@{id=$p.id;name=$p.name;slides=$p.source.slide_count}}}}
 }
-Export-ModuleMember -Function Get-LFRoot,Write-LFJson,Get-LFProjectPath,Read-LFProject,Get-LFPreset,New-LFProject,Update-LFProject,Get-LFProjects,ConvertFrom-LFScripts
+Export-ModuleMember -Function Read-LFSharedJson,Get-LFRoot,Write-LFJson,Get-LFProjectPath,Read-LFProject,Get-LFPreset,New-LFProject,Update-LFProject,Get-LFProjects,ConvertFrom-LFScripts

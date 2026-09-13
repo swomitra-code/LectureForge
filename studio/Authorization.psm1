@@ -45,7 +45,7 @@ function Get-LFSelectionInputs([string]$Root,[string]$Id,[string]$Dir){
      if($candidate.slide_number -ne $s.number -or $candidate.status -ne 'approved' -or $candidate.rejected -eq $true -or $candidate.narration_sha256 -ne $asset.sha256 -or $candidate.preset_sha256 -ne $presetHash -or $candidate.validation.passed -ne $true -or $candidate.validation.authoritative_audio_verified -ne $true){continue}
      try{
       $path=Resolve-LFReusableAsset $Dir $candidate.path
-      if((Test-Path $path) -and (Get-FileHash $path).Hash -eq $candidate.sha256){$reuse=[ordered]@{id=$candidate.id;path=$candidate.path;sha256=$candidate.sha256;narration_sha256=$candidate.narration_sha256;preset_sha256=$candidate.preset_sha256};break}
+      if((Test-Path $path) -and (Get-FileHash $path).Hash -eq $candidate.sha256){$reuse=[ordered]@{id=$candidate.id;path=$candidate.path;sha256=$candidate.sha256;narration_sha256=$candidate.narration_sha256;preset_sha256=$candidate.preset_sha256};if($candidate.video_id){$reuse['video_id']=$candidate.video_id};break}
      }catch{ } # Invalid historical assets cannot earn reuse credit.
     }
    }catch{$asset=$null;$preparation=$null;$status='selected asset missing/invalid'}
