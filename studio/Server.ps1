@@ -1,19 +1,50 @@
-﻿param([Parameter(Mandatory=$true)][string]$RuntimeRoot,[int]$Port=8770,[Parameter(Mandatory=$true)][string]$Instance,[int]$WorkerPid)
+param([Parameter(Mandatory=$true)][string]$RuntimeRoot,[int]$Port=8770,[Parameter(Mandatory=$true)][string]$Instance,[int]$WorkerPid)
 $ErrorActionPreference='Stop'
 Import-Module (Join-Path $PSScriptRoot 'Production.psm1') -Force
+Import-Module (Join-Path $PSScriptRoot 'Narration.psm1') -Force
 Add-Type -AssemblyName System.Web
 $root=Get-LFRoot $RuntimeRoot;$token=[guid]::NewGuid().ToString('N')+[guid]::NewGuid().ToString('N')
 $listener=[Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback,$Port)
 $stopping=$false
+function Read-WorkerHeartbeat([string]$Path){
+ # The worker atomically replaces this file. Permit replacement while reading;
+ # briefly retry Windows sharing conflicts, but report persistent I/O failures.
+ for($attempt=0;$attempt -lt 5;$attempt++){
+  $reader=$null
+  try{
+   $share=[IO.FileShare]::ReadWrite -bor [IO.FileShare]::Delete
+   $reader=[IO.StreamReader]::new([IO.File]::Open($Path,[IO.FileMode]::Open,[IO.FileAccess]::Read,$share),[Text.Encoding]::UTF8)
+   return ($reader.ReadToEnd()|ConvertFrom-Json)
+  }catch [IO.IOException]{if($attempt -eq 4){throw};Start-Sleep -Milliseconds 20}finally{if($reader){$reader.Dispose()}}
+ }
+}
 function Reply($Stream,[int]$Code,$Value,[string]$Type='application/json; charset=utf-8'){
  $bytes=if($Value -is [byte[]]){$Value}elseif($Type.StartsWith('application/json')){[Text.Encoding]::UTF8.GetBytes((ConvertTo-Json -InputObject $Value -Depth 30 -Compress))}else{[Text.Encoding]::UTF8.GetBytes([string]$Value)}
  $header=[Text.Encoding]::ASCII.GetBytes("HTTP/1.1 $Code OK`r`nContent-Type: $Type`r`nContent-Length: $($bytes.Length)`r`nConnection: close`r`nCache-Control: no-store`r`nX-Content-Type-Options: nosniff`r`nContent-Security-Policy: default-src 'self'; frame-ancestors 'none'; base-uri 'none'`r`n`r`n")
  $Stream.Write($header,0,$header.Length);$Stream.Write($bytes,0,$bytes.Length)
 }
+function Send-Audio($Stream,[string]$Path,[string]$Range){
+ $f=[IO.File]::OpenRead($Path)
+ try{
+  $start=0L;$end=$f.Length-1;$code=200;$extra=''
+  if($Range){
+   if($Range -notmatch '^bytes=(\d*)-(\d*)$' -or (-not $Matches[1] -and -not $Matches[2])){throw 'Unsupported audio range.'}
+   if($Matches[1]){$start=[long]$Matches[1];if($Matches[2]){$end=[math]::Min($end,[long]$Matches[2])}}else{$start=[math]::Max(0,$f.Length-[long]$Matches[2])}
+   if($start -gt $end -or $start -ge $f.Length){
+    $h=[Text.Encoding]::ASCII.GetBytes("HTTP/1.1 416 Range Not Satisfiable`r`nContent-Range: bytes */$($f.Length)`r`nContent-Length: 0`r`nConnection: close`r`n`r`n");$Stream.Write($h,0,$h.Length);return
+   }
+   $code=206;$extra="Content-Range: bytes $start-$end/$($f.Length)`r`n"
+  }
+  $type=if($Path.EndsWith('.wav')){'audio/wav'}else{'audio/mpeg'};$length=$end-$start+1
+  $h=[Text.Encoding]::ASCII.GetBytes("HTTP/1.1 $code OK`r`nContent-Type: $type`r`nAccept-Ranges: bytes`r`n$($extra)Content-Length: $length`r`nCache-Control: private, max-age=3600`r`nX-Content-Type-Options: nosniff`r`nConnection: close`r`n`r`n")
+  $Stream.Write($h,0,$h.Length);$null=$f.Seek($start,[IO.SeekOrigin]::Begin);$buffer=New-Object byte[] 65536
+  while($length -gt 0){$n=$f.Read($buffer,0,[int][math]::Min($buffer.Length,$length));if($n -le 0){throw 'Audio read incomplete.'};$Stream.Write($buffer,0,$n);$length-=$n}
+ }finally{$f.Dispose()}
+}
 try{
  $listener.Start()
  [Console]::Out.WriteLine('Loopback listener started.')
- Write-LFJson (Join-Path $root 'runtime.json') @{instance=$Instance;server_pid=$PID;worker_pid=$WorkerPid;port=$Port;url="http://127.0.0.1:$Port/";status='running';milestone='A'}
+ Write-LFJson (Join-Path $root 'runtime.json') @{instance=$Instance;server_pid=$PID;worker_pid=$WorkerPid;port=$Port;url="http://127.0.0.1:$Port/";status='running';milestone='B'}
  while(-not $stopping -and -not (Test-Path (Join-Path $root "$Instance.stop"))){
   if(-not $listener.Pending()){Start-Sleep -Milliseconds 100;continue}
   $client=$listener.AcceptTcpClient();$stream=$client.GetStream();$stream.ReadTimeout=2000;$stream.WriteTimeout=10000
@@ -39,12 +70,48 @@ try{
    $body=New-Object byte[] ([int]$size);$read=0
    while($read -lt $size){$got=$stream.Read($body,$read,[int]$size-$read);if($got -le 0){throw 'Incomplete upload.'};$read+=$got}
    if($method -eq 'GET' -and $path -eq '/api/health'){
-    $beat=Get-Content -Encoding UTF8 -Raw (Join-Path $root "$Instance.worker.json")|ConvertFrom-Json
-    Reply $stream 200 @{instance=$Instance;ready=($beat.stage -eq 'idle' -and ([DateTime]::UtcNow-[DateTimeOffset]::Parse($beat.utc).UtcDateTime).TotalSeconds -lt 5);worker=$beat.stage;provider_calls=0;milestone='A'}
+    $beatFile=Join-Path $root "$Instance.worker.json"
+    $beat=if(Test-Path $beatFile){Read-WorkerHeartbeat $beatFile}else{[pscustomobject]@{stage='starting';utc=[DateTime]::UtcNow.ToString('o')}}
+    Reply $stream 200 @{instance=$Instance;ready=($beat.stage -in @('idle','working') -and ([DateTime]::UtcNow-[DateTimeOffset]::Parse($beat.utc).UtcDateTime).TotalSeconds -lt 5);worker=$beat.stage;heygen_calls=0;milestone='B'}
    }elseif($method -eq 'GET' -and $path -eq '/api/bootstrap'){
-    Reply $stream 200 @{token=$token;root=(Join-Path $root 'Projects');presets=@(Get-LFPreset);projects=@(Get-LFProjects $root);milestone='A'}
+    Reply $stream 200 @{token=$token;root=(Join-Path $root 'Projects');presets=@(Get-LFPreset);projects=@(Get-LFProjects $root);milestone='B'}
    }elseif($method -eq 'GET' -and $path -eq '/api/project'){
     Reply $stream 200 (Read-LFProject $root $query['id'])
+   }elseif($method -eq 'GET' -and $path -eq '/api/narration'){
+    Reply $stream 200 (Get-LFNarration $root $query['id'])
+   }elseif($method -eq 'GET' -and $path -eq '/api/narration-plan'){
+    Reply $stream 200 (Get-LFNarrationPlan $root $query['id'])
+   }elseif($method -eq 'POST' -and $path -eq '/api/narration-generate'){
+    $data=[Text.Encoding]::UTF8.GetString($body)|ConvertFrom-Json
+    if($data.confirm -ne $true){throw 'Explicit narration generation confirmation required.'}
+    Add-LFNarrationBatch $root $query['id'] $data.version
+    Reply $stream 200 (Get-LFNarration $root $query['id'])
+   }elseif($method -eq 'POST' -and $path -eq '/api/narration-select'){
+    $data=[Text.Encoding]::UTF8.GetString($body)|ConvertFrom-Json
+    Set-LFNarrationSelection $root $query['id'] $data.slide $data.revision $data.take
+    Reply $stream 200 (Get-LFNarration $root $query['id'])
+   }elseif($method -eq 'POST' -and $path -eq '/api/narration-retry'){
+    $data=[Text.Encoding]::UTF8.GetString($body)|ConvertFrom-Json
+    if($data.confirm -ne $true){throw 'Explicit retry confirmation required.'}
+    Retry-LFNarration $root $query['id'] $data.revision $data.take
+    Reply $stream 200 (Get-LFNarration $root $query['id'])
+   }elseif($method -eq 'POST' -and $path -eq '/api/thumbnails'){
+    $null=Read-LFProject $root $query['id'];$dir=Get-LFProjectPath $root $query['id']
+    [void][IO.Directory]::CreateDirectory((Join-Path $dir 'thumbs'))
+    Write-LFJson (Join-Path $dir 'thumbs/request.json') @{requested=$true}
+    Reply $stream 200 @{queued=$true}
+   }elseif($method -eq 'GET' -and $path -eq '/api/thumbnail'){
+    $dir=Get-LFProjectPath $root $query['id'];$n=[int]$query['slide']
+    if($n -lt 1 -or $n -gt 500){throw 'Invalid slide.'}
+    $file=Join-Path $dir "thumbs/s$n.png"
+    if(Test-Path $file){Reply $stream 200 ([IO.File]::ReadAllBytes($file)) 'image/png'}else{Reply $stream 404 @{error='Thumbnail pending or unavailable.'}}
+   }elseif($method -eq 'GET' -and $path -eq '/api/audio'){
+    $dir=Get-LFProjectPath $root $query['id'];$state=Read-LFNarrationFile $dir
+    $r=@($state.revisions|Where-Object id -eq $query['revision'])[0];$n=[int]$query['take']
+    if(-not $r -or $n -notin 1,2,3){throw 'Unknown narration take.'}
+    $t=$r.takes[$n-1];if(-not (Test-LFTake $dir $t)){throw 'Narration media hash mismatch or take unavailable.'}
+    $file=Resolve-LFNarrationAsset $dir $t.asset.path
+    Send-Audio $stream $file $headers['range']
    }elseif($method -eq 'POST' -and $path -eq '/api/new'){
     if($headers['content-type'] -ne 'application/octet-stream'){throw 'Expected a PPTX upload.'}
     Reply $stream 200 (New-LFProject $root $query['name'] $query['filename'] $body $query['preset'])
@@ -59,7 +126,7 @@ try{
    }elseif($method -eq 'GET' -and $path -in @('/','/studio.js','/studio.css')){
     $file=if($path -eq '/'){'index.html'}else{$path.TrimStart('/')};$type=if($file.EndsWith('.js')){'text/javascript'}elseif($file.EndsWith('.css')){'text/css'}else{'text/html; charset=utf-8'}
     Reply $stream 200 ([IO.File]::ReadAllBytes((Join-Path $PSScriptRoot "web/$file"))) $type
-   }else{Reply $stream 404 @{error='This action is not available in Milestone A.'}}
+   }else{Reply $stream 404 @{error='This action is not available in Milestone B.'}}
   }catch{
    $message=$_.Exception.Message
    foreach($key in @($env:ELEVENLABS_API_KEY,$env:HEYGEN_API_KEY)){if($key){$message=$message.Replace($key,'[REDACTED]')}}
@@ -71,5 +138,5 @@ try{
  $listener.Stop();[IO.File]::WriteAllText((Join-Path $root "$Instance.stop"),'stop')
  for($i=0;$i -lt 20;$i++){if(-not (Get-Process -Id $WorkerPid -ErrorAction SilentlyContinue)){break};Start-Sleep -Milliseconds 250}
  $current=Get-Content -Encoding UTF8 -Raw (Join-Path $root 'runtime.json')|ConvertFrom-Json
- if($current.instance -eq $Instance){Write-LFJson (Join-Path $root 'runtime.json') @{instance=$Instance;server_pid=$PID;worker_pid=$WorkerPid;port=$Port;url="http://127.0.0.1:$Port/";status='stopped';milestone='A'}}
+ if($current.instance -eq $Instance){Write-LFJson (Join-Path $root 'runtime.json') @{instance=$Instance;server_pid=$PID;worker_pid=$WorkerPid;port=$Port;url="http://127.0.0.1:$Port/";status='stopped';milestone='B'}}
 }

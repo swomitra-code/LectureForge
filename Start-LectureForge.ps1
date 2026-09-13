@@ -1,4 +1,4 @@
-﻿param([string]$RuntimeRoot=(Join-Path $env:LOCALAPPDATA 'LectureForge'),[ValidateRange(1024,65535)][int]$Port=8770,[switch]$NoBrowser)
+param([string]$RuntimeRoot=(Join-Path $env:LOCALAPPDATA 'LectureForge'),[ValidateRange(1024,65535)][int]$Port=8770,[switch]$NoBrowser)
 $ErrorActionPreference='Stop'
 Import-Module (Join-Path $PSScriptRoot 'studio/Production.psm1') -Force
 $root=Get-LFRoot $RuntimeRoot
@@ -19,7 +19,7 @@ try{
   if(Test-Path $runtime){
    $old=Get-Content -Encoding UTF8 -Raw $runtime|ConvertFrom-Json
    if($old.status -eq 'running'){
-    try{$health=Invoke-RestMethod -UseBasicParsing -Uri ($old.url+'api/health') -TimeoutSec 2;$running=($health.instance -eq $old.instance -and $health.ready)}catch{}
+    try{$health=Invoke-RestMethod -UseBasicParsing -Uri ($old.url+'api/health') -TimeoutSec 2;$running=($health.instance -eq $old.instance -and $health.ready -and $health.milestone -eq 'B')}catch{}
     if($running){$url=$old.url}else{
      # Signal only the old instance; never terminate unrelated/user-owned processes.
      [IO.File]::WriteAllText((Join-Path $root ($old.instance+'.stop')),'stop')

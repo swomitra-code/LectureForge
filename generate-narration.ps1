@@ -16,67 +16,7 @@ function Get-ManifestTakePath([string]$configuredOutputDirectory, [int]$slideNum
     return ((Join-Path $configuredOutputDirectory $filename) -replace '\\', '/')
 }
 
-function Protect-NarrationDiagnostic([string]$Value, [string[]]$SensitiveValues) {
-    foreach ($sensitive in $SensitiveValues) {
-        if ([string]::IsNullOrEmpty($sensitive)) { continue }
-        $Value = $Value.Replace($sensitive, '[REDACTED]')
-        $escaped = ConvertTo-Json -InputObject $sensitive -Compress
-        $Value = $Value.Replace($escaped.Substring(1, $escaped.Length - 2), '[REDACTED]')
-    }
-    # Suppress credential/header lines and any echoed request fields, including partial text.
-    $Value = $Value -replace '(?im)^.*(?:\b(?:authorization|xi-api-key|api[_-]?key)["\s]*[:=]|bearer\s|"(?:text|input|body|payload|headers)"\s*:).*$', '[REDACTED]'
-    return $Value
-}
-
-function Get-NarrationFailureDiagnostic($Failure, [string[]]$SensitiveValues) {
-    $parts = [Collections.Generic.List[string]]::new()
-    $exception = $Failure.Exception
-    $parts.Add("Exception: $($exception.GetType().FullName): $($exception.Message)")
-    $inner = $exception.InnerException
-    while ($null -ne $inner) {
-        $parts.Add("Inner exception: $($inner.GetType().FullName): $($inner.Message)")
-        $inner = $inner.InnerException
-    }
-    $response = $exception.Response
-    if ($null -ne $response -and $null -ne $response.StatusCode) {
-        $parts.Add("HTTP status: $([int]$response.StatusCode)")
-    }
-    if ($null -ne $response) {
-        foreach ($header in @('request-id', 'x-request-id')) {
-            try {
-                $requestId = $response.Headers.GetValues($header) -join ', '
-                if ($requestId) { $parts.Add("Request ID: $requestId") }
-            } catch { } # Header may be absent; never dump the headers collection.
-        }
-    }
-    $providerBody = [string]$Failure.ErrorDetails.Message
-    if ([string]::IsNullOrWhiteSpace($providerBody) -and $null -ne $response) {
-        try {
-            if ($null -ne $response.Content) {
-                $providerBody = $response.Content.ReadAsStringAsync().GetAwaiter().GetResult()
-            } else {
-                $reader = [IO.StreamReader]::new($response.GetResponseStream())
-                try { $providerBody = $reader.ReadToEnd() } finally { $reader.Dispose() }
-            }
-        } catch { } # An unavailable body must not replace the original failure.
-    }
-    if (-not [string]::IsNullOrWhiteSpace($providerBody)) {
-        try {
-            $provider = $providerBody | ConvertFrom-Json
-            # Allowlist diagnostic fields; validation input and request payloads are excluded.
-            foreach ($entry in @($provider, $provider.detail)) {
-                if ($null -eq $entry) { continue }
-                foreach ($field in @('status', 'message', 'request_id')) {
-                    if ($entry.$field -is [string]) { $parts.Add("Provider ${field}: $($entry.$field)") }
-                }
-                if ($entry -is [string]) { $parts.Add("Provider detail: $entry") }
-            }
-        } catch {
-            $parts.Add('Provider body unavailable as structured JSON; raw body omitted for privacy.')
-        }
-    }
-    return Protect-NarrationDiagnostic ($parts -join [Environment]::NewLine) $SensitiveValues
-}
+Import-Module (Join-Path $PSScriptRoot 'studio/NarrationProvider.psm1')
 
 $manifestFile = (Resolve-Path -LiteralPath $ManifestPath).Path
 $manifestDirectory = Split-Path -Parent $manifestFile
