@@ -48,7 +48,7 @@ function New-V2WhiteAvatar {
     $time=$duration.ToString('0.000000',[Globalization.CultureInfo]::InvariantCulture)
     # Avatar input 0 is VIDEO ONLY. Explicit authoritative narration is input 1.
     # Restore alpha after RGB despill, then composite the compact tile onto white.
-    $filter='[0:v]crop=640:560:870:70,format=rgba,split[c][a];[a]alphaextract[alpha];[c]despill=type=green:mix=0.35:expand=0:alpha=0[rgb];[rgb][alpha]alphamerge,tpad=stop_mode=clone:stop_duration=1[fg];color=c=white:s=640x560:r=25[bg];[bg][fg]overlay=format=auto,scale=in_range=pc:out_range=tv,format=yuv420p[v]'
+    $filter='[0:v]crop=640:560:870:70,format=rgba,split[c][a];[a]alphaextract,geq=lum=p(X\,Y)*clip((559-Y)/70\,0\,1)[alpha];[c]despill=type=green:mix=0.35:expand=0:alpha=0[rgb];[rgb][alpha]alphamerge,tpad=stop_mode=clone:stop_duration=1[fg];color=c=white:s=640x560:r=25[bg];[bg][fg]overlay=format=auto,scale=in_range=pc:out_range=tv,format=yuv420p[v]'
     $args=@('-n','-v','error','-threads','2','-c:v','libvpx-vp9','-i',$avatarAsset.path,'-i',$narrationAsset.path,'-filter_complex_threads','1','-filter_complex',$filter,'-map','[v]','-map','1:a:0','-c:v','libx264','-threads','2','-preset','medium','-crf','18','-color_range','tv','-colorspace','bt709','-color_primaries','bt709','-color_trc','bt709','-c:a','aac','-b:a','192k','-ar','48000','-ac','2','-t',$time,'-movflags','+faststart',$out)
     & ffmpeg @args
     if($LASTEXITCODE -ne 0){throw 'White-avatar composition failed.'}
@@ -65,7 +65,7 @@ function New-V2WhiteAvatar {
     if($LASTEXITCODE -ne 0 -or $actual -ne $expected){throw 'Authoritative narration packet mismatch.'}
     $motion=Get-V2MotionEvidence $out (Join-Path $evidence 'mouth.framemd5')
     if((Get-V2Asset $avatarAsset.path).sha256 -ne $AvatarSha256 -or (Get-V2Asset $narrationAsset.path).sha256 -ne $NarrationSha256){throw 'Input asset changed.'}
-    $report=[ordered]@{output=$out;output_sha256=(Get-V2Asset $out).sha256;avatar_sha256=$AvatarSha256;narration_sha256=$NarrationSha256;narration_audio_map='1:a:0';avatar_audio_mapped=$false;audio_routing_verified=$true;audio_packet_hash=$actual;ffmpeg_arguments=$args;duration=$duration;tile_width=640;tile_height=560;background_rgb=@(255,255,255);motion=$motion;provider_calls=0;production_audio_listening='pending instructor';framing_issue='Straight lower-torso crop edge; refine during real production.'}
+    $report=[ordered]@{output=$out;output_sha256=(Get-V2Asset $out).sha256;avatar_sha256=$AvatarSha256;narration_sha256=$NarrationSha256;narration_audio_map='1:a:0';avatar_audio_mapped=$false;audio_routing_verified=$true;audio_packet_hash=$actual;ffmpeg_arguments=$args;duration=$duration;tile_width=640;tile_height=560;background_rgb=@(255,255,255);motion=$motion;provider_calls=0;production_audio_listening='pending instructor';framing_issue='Lower 70 pixels fade smoothly into white; head and shoulder alpha retained.'}
     Write-V2Json (Join-Path $evidence 'white-avatar-validation.json') $report
     [pscustomobject]$report
 }

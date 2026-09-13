@@ -1,0 +1,10 @@
+{
+  "id": "renewable-energy",
+  "version": 1,
+  "name": "Renewable Energy — Solar Thermal proven settings",
+  "narration": {"voice_id":"PqwAVcrzgTuCTbgkDpWl","model_id":"eleven_multilingual_v2","stability":0.34,"similarity_boost":0.80,"style":0.50,"use_speaker_boost":true,"speed":1.00,"takes_per_slide":3},
+  "avatar": {"name":"SKM-BLUE-7","id":"f04bc24f9fd7480885c266c4f1d71f98","background_rgb":[255,255,255],"crop":{"x":870,"y":70,"width":640,"height":560},"torso_fade_pixels":70},
+  "placement": {"left":0.875,"top":0.8111111111111111,"width":0.11458333333333333,"height":0.17824074074074073,"reference_width_points":960,"reference_height_points":540},
+  "encoding": {"width":640,"height":560,"fps":25,"video_codec":"libx264","pixel_format":"yuv420p","crf":18,"preset":"medium","audio_codec":"aac","audio_bitrate":"192k","audio_sample_rate":48000,"audio_channels":2,"faststart":true},
+  "recording": {"separate_avatar":true,"autoplay":true,"border":false,"shadow":false,"authoritative_selected_narration":true,"assembly_stage":"explicit_final_action"}
+}

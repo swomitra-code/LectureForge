@@ -57,10 +57,15 @@ function Test-V2RecordingPackage([string]$OutputPath,[string]$ApprovedVideoSha25
         if($mediaTargets.Count -ne 1){throw 'Expected one internally referenced video asset.'}
         $entry=$archive.GetEntry($mediaTargets[0])
         if($null -eq $entry){throw 'Referenced embedded media is missing.'}
-        $embedded=Join-Path $EvidenceDirectory 'embedded-approved-slide-1.mp4'
+        # Keep the leaf short: authorized attempt paths approach Windows MAX_PATH.
+        $resolvedEvidence=[IO.Path]::GetFullPath($EvidenceDirectory)
+        $embedded=[IO.Path]::GetFullPath((Join-Path $resolvedEvidence 'embedded.mp4'))
+        if([IO.Path]::GetDirectoryName($embedded) -ne $resolvedEvidence.TrimEnd('\')){throw 'Extraction destination escaped its evidence directory.'}
+        if($embedded.Length -ge 260){throw "Extraction path exceeds the Windows PowerShell limit; choose a shorter evidence directory: $embedded"}
+        [void][IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($embedded))
         if(Test-Path -LiteralPath $embedded){throw 'Extracted evidence exists; choose a new evidence directory.'}
-        $inputStream=$entry.Open();$outputStream=[IO.File]::Create($embedded)
-        try{$inputStream.CopyTo($outputStream)}finally{$inputStream.Dispose();$outputStream.Dispose()}
+        $inputStream=$entry.Open();$outputStream=$null
+        try{$outputStream=[IO.File]::Open($embedded,[IO.FileMode]::CreateNew);$inputStream.CopyTo($outputStream)}finally{$inputStream.Dispose();if($outputStream){$outputStream.Dispose()}}
         $hash=(Get-V2Asset $embedded).sha256
         if($hash -ne $ApprovedVideoSha256){throw 'Embedded video bytes differ from approved MP4.'}
     }finally{$archive.Dispose()}
@@ -226,7 +231,7 @@ function New-V2RecordingProof {
 
         $package = Test-V2RecordingPackage $outputPath $videoAsset.sha256 $evidence
         foreach($property in $package.PSObject.Properties){$report[$property.Name]=$property.Value}
-        $report.embedded_motion=Get-V2MotionEvidence (Join-Path $evidence 'embedded-approved-slide-1.mp4') (Join-Path $evidence 'embedded-mouth.framemd5')
+        $report.embedded_motion=Get-V2MotionEvidence (Join-Path $evidence 'embedded.mp4') (Join-Path $evidence 'embedded-mouth.framemd5')
         if(-not $report.live_autoplay_advanced){throw 'Live autoplay did not advance; stop for desktop inspection.'}
         $report.source_sha256_after=(Get-V2Asset $sourceAsset.path).sha256
         if($report.source_sha256_after -ne $sourceAsset.sha256 -or (Get-V2Asset $videoAsset.path).sha256 -ne $videoAsset.sha256){throw 'Canonical source or approved MP4 changed.'}
