@@ -76,7 +76,12 @@ function Set-LFNarrationSelection([string]$Root,[string]$Id,[int]$Slide,[string]
   $p=Read-LFProject $Root $Id;$state=Read-LFNarrationFile $dir;$s=@($p.slides|Where-Object number -eq $Slide)[0];$r=Get-LFCurrentRevision $state $p $s
   if(-not $r -or $r.id -ne $Revision -or $Take -notin 0,1,2,3){throw 'Narration revision changed. Reload this slide.'}
   if($Take -ne 0 -and -not (Test-LFTake $dir $r.takes[$Take-1])){throw 'Take is not verified and ready.'}
-  $r.selected_take=if($Take){$Take}else{$null};Write-LFJson (Join-Path $dir 'narration.json') $state
+  $selected=if($Take){$Take}else{$null}
+  if($r.selected_take -ne $selected){
+   if($state.PSObject.Properties.Name -notcontains 'intent_revision'){$state|Add-Member -NotePropertyName intent_revision -NotePropertyValue 0}
+   $state.intent_revision++
+  }
+  $r.selected_take=$selected;Write-LFJson (Join-Path $dir 'narration.json') $state
  }
 }
 function Retry-LFNarration([string]$Root,[string]$Id,[string]$Revision,[int]$Take){
