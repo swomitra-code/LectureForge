@@ -4,6 +4,7 @@ Import-Module (Join-Path $PSScriptRoot 'Production.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'Narration.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'Authorization.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'AvatarProduction.psm1') -Force
+Import-Module (Join-Path $PSScriptRoot 'Assembly.psm1') -Force
 Add-Type -AssemblyName System.Web
 $root=Get-LFRoot $RuntimeRoot;$token=[guid]::NewGuid().ToString('N')+[guid]::NewGuid().ToString('N')
 $listener=[Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback,$Port)
@@ -46,15 +47,15 @@ function Send-Audio($Stream,[string]$Path,[string]$Range){
 try{
  $listener.Start()
  [Console]::Out.WriteLine('Loopback listener started.')
- Write-LFJson (Join-Path $root 'runtime.json') @{instance=$Instance;server_pid=$PID;worker_pid=$WorkerPid;port=$Port;url="http://127.0.0.1:$Port/";status='running';milestone='D'}
+ Write-LFJson (Join-Path $root 'runtime.json') @{instance=$Instance;server_pid=$PID;worker_pid=$WorkerPid;port=$Port;url="http://127.0.0.1:$Port/";status='running';milestone='E'}
  while(-not $stopping -and -not (Test-Path (Join-Path $root "$Instance.stop"))){
   if(-not (Get-Process -Id $WorkerPid -ErrorAction SilentlyContinue)){
    # Recover only this instance's worker. Durable leases protect existing children.
    $log=Join-Path $root ($Instance+'.recovery-'+[guid]::NewGuid().ToString('N').Substring(0,8))
    $args='-NoProfile -ExecutionPolicy Bypass -File "'+(Join-Path $PSScriptRoot 'Worker.ps1')+'" -RuntimeRoot "'+$root+'" -Instance '+$Instance
-   $recovered=Start-Process (Join-Path $PSHOME 'powershell.exe') -WindowStyle Hidden -PassThru -RedirectStandardOutput ($log+'.log') -RedirectStandardError ($log+'.err') -ArgumentList $args
+   $recovered=Start-Process (Join-Path $PSHOME 'powershell.exe') -PassThru -RedirectStandardOutput ($log+'.log') -RedirectStandardError ($log+'.err') -ArgumentList $args
    $WorkerPid=$recovered.Id
-   Write-LFJson (Join-Path $root 'runtime.json') @{instance=$Instance;server_pid=$PID;worker_pid=$WorkerPid;port=$Port;url="http://127.0.0.1:$Port/";status='running';milestone='D'}
+   Write-LFJson (Join-Path $root 'runtime.json') @{instance=$Instance;server_pid=$PID;worker_pid=$WorkerPid;port=$Port;url="http://127.0.0.1:$Port/";status='running';milestone='E'}
   }
   if(-not $listener.Pending()){Start-Sleep -Milliseconds 100;continue}
   $client=$listener.AcceptTcpClient();$stream=$client.GetStream();$stream.ReadTimeout=2000;$stream.WriteTimeout=10000
@@ -82,11 +83,34 @@ try{
    if($method -eq 'GET' -and $path -eq '/api/health'){
     $beatFile=Join-Path $root "$Instance.worker.json"
     $beat=if(Test-Path $beatFile){Read-WorkerHeartbeat $beatFile}else{[pscustomobject]@{stage='starting';utc=[DateTime]::UtcNow.ToString('o')}}
-    Reply $stream 200 @{instance=$Instance;ready=($beat.stage -in @('idle','working') -and ([DateTime]::UtcNow-[DateTimeOffset]::Parse($beat.utc).UtcDateTime).TotalSeconds -lt 5);worker=$beat.stage;milestone='D'}
+    Reply $stream 200 @{instance=$Instance;ready=($beat.stage -in @('idle','working') -and ([DateTime]::UtcNow-[DateTimeOffset]::Parse($beat.utc).UtcDateTime).TotalSeconds -lt 5);worker=$beat.stage;milestone='E'}
    }elseif($method -eq 'GET' -and $path -eq '/api/bootstrap'){
-    Reply $stream 200 @{token=$token;root=(Join-Path $root 'Projects');presets=@(Get-LFPreset);projects=@(Get-LFProjects $root);milestone='D'}
+    Reply $stream 200 @{token=$token;root=(Join-Path $root 'Projects');presets=@(Get-LFPreset);projects=@(Get-LFProjects $root);milestone='E'}
    }elseif($method -eq 'GET' -and $path -eq '/api/project'){
     Reply $stream 200 (Read-LFProject $root $query['id'])
+   }elseif($method -eq 'GET' -and $path -eq '/api/assembly-ready'){
+    Reply $stream 200 (Get-LFAssemblyReadiness $root $query['id'])
+   }elseif($method -eq 'GET' -and $path -eq '/api/assembly-status'){
+    Reply $stream 200 (Get-LFAssemblyStatus $root $query['id'])
+   }elseif($method -eq 'POST' -and $path -eq '/api/assembly-create'){
+    $data=[Text.Encoding]::UTF8.GetString($body)|ConvertFrom-Json
+    Reply $stream 200 (Request-LFAssembly $root $query['id'] $data.expected $data.folder)
+   }elseif($method -eq 'POST' -and $path -eq '/api/assembly-placement'){
+    $data=[Text.Encoding]::UTF8.GetString($body)|ConvertFrom-Json
+    Set-LFAssemblyPlacement $root $query['id'] $data.slide $data.placement $data.version
+    Reply $stream 200 @{saved=$true}
+   }elseif($method -eq 'POST' -and $path -eq '/api/recording-open'){
+    $data=[Text.Encoding]::UTF8.GetString($body)|ConvertFrom-Json
+    Reply $stream 200 (Open-LFRecording $root $query['id'] $data.kind)
+   }elseif($method -eq 'POST' -and $path -eq '/api/output-choose'){
+    $dir=Get-LFProjectPath $root $query['id']
+    Write-LFJson (Join-Path $dir 'folder-choice.json') @{state='pending'}
+    $args='-NoProfile -STA -ExecutionPolicy Bypass -File "'+(Join-Path $PSScriptRoot 'Select-OutputFolder.ps1')+'" -ProjectDirectory "'+$dir+'"'
+    $null=Start-Process (Join-Path $PSHOME 'powershell.exe') -PassThru -ArgumentList $args
+    Reply $stream 200 @{choosing=$true}
+   }elseif($method -eq 'GET' -and $path -eq '/api/output-choice'){
+    $choice=Join-Path (Get-LFProjectPath $root $query['id']) 'folder-choice.json'
+    Reply $stream 200 $(if(Test-Path $choice){Read-LFSharedJson $choice}else{@{state='pending'}})
    }elseif($method -eq 'GET' -and $path -eq '/api/avatar-status'){
     Reply $stream 200 (Get-LFAvatarStatus $root $query['id'])
    }elseif($method -eq 'POST' -and $path -eq '/api/avatar-pause'){
@@ -157,10 +181,10 @@ try{
     Reply $stream 200 @{opened=$true}
    }elseif($method -eq 'POST' -and $path -eq '/api/stop'){
     $stopping=$true;Reply $stream 200 @{stopped=$true}
-   }elseif($method -eq 'GET' -and $path -in @('/','/studio.js','/studio.css','/selections.js','/avatars.js')){
+   }elseif($method -eq 'GET' -and $path -in @('/','/studio.js','/studio.css','/selections.js','/avatars.js','/assembly.js')){
     $file=if($path -eq '/'){'index.html'}else{$path.TrimStart('/')};$type=if($file.EndsWith('.js')){'text/javascript'}elseif($file.EndsWith('.css')){'text/css'}else{'text/html; charset=utf-8'}
     Reply $stream 200 ([IO.File]::ReadAllBytes((Join-Path $PSScriptRoot "web/$file"))) $type
-   }else{Reply $stream 404 @{error='This action is not available in Milestone D.'}}
+   }else{Reply $stream 404 @{error='This action is not available in Milestone E.'}}
   }catch{
    $message=$_.Exception.Message
    foreach($key in @($env:ELEVENLABS_API_KEY,$env:HEYGEN_API_KEY)){if($key){$message=$message.Replace($key,'[REDACTED]')}}
@@ -172,5 +196,5 @@ try{
  $listener.Stop();[IO.File]::WriteAllText((Join-Path $root "$Instance.stop"),'stop')
  for($i=0;$i -lt 20;$i++){if(-not (Get-Process -Id $WorkerPid -ErrorAction SilentlyContinue)){break};Start-Sleep -Milliseconds 250}
  $current=Read-LFSharedJson (Join-Path $root 'runtime.json')
- if($current.instance -eq $Instance){Write-LFJson (Join-Path $root 'runtime.json') @{instance=$Instance;server_pid=$PID;worker_pid=$WorkerPid;port=$Port;url="http://127.0.0.1:$Port/";status='stopped';milestone='D'}}
+ if($current.instance -eq $Instance){Write-LFJson (Join-Path $root 'runtime.json') @{instance=$Instance;server_pid=$PID;worker_pid=$WorkerPid;port=$Port;url="http://127.0.0.1:$Port/";status='stopped';milestone='E'}}
 }

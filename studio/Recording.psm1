@@ -28,17 +28,24 @@ function Read-RecordingPackageXml($Archive,[string]$Name) {
     try{[xml]$reader.ReadToEnd()}finally{$reader.Dispose()}
 }
 
-function Test-V2RecordingPackage([string]$OutputPath,[string]$ApprovedVideoSha256,[string]$EvidenceDirectory) {
+function Test-V2RecordingPackage([string]$OutputPath,[string]$ApprovedVideoSha256,[string]$EvidenceDirectory,[int]$SlideNumber=1) {
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     $archive=[IO.Compression.ZipFile]::OpenRead($OutputPath)
     try {
-        $slideXml=Read-RecordingPackageXml $archive 'ppt/slides/slide1.xml'
-        $rels=Read-RecordingPackageXml $archive 'ppt/slides/_rels/slide1.xml.rels'
+        $pres=Read-RecordingPackageXml $archive 'ppt/presentation.xml'
+        $presRels=Read-RecordingPackageXml $archive 'ppt/_rels/presentation.xml.rels'
+        $node=@($pres.presentation.sldIdLst.sldId)[$SlideNumber-1]
+        $rid=$node.GetAttribute('id','http://schemas.openxmlformats.org/officeDocument/2006/relationships')
+        $target=@($presRels.Relationships.Relationship|Where-Object Id -eq $rid)[0].Target
+        $slidePart=([Uri]::new([Uri]'http://package.invalid/ppt/presentation.xml',[string]$target)).AbsolutePath.TrimStart('/')
+        $slideXml=Read-RecordingPackageXml $archive $slidePart
+        $rels=Read-RecordingPackageXml $archive (([IO.Path]::GetDirectoryName($slidePart).Replace('\','/'))+'/_rels/'+[IO.Path]::GetFileName($slidePart)+'.rels')
         $ns=[Xml.XmlNamespaceManager]::new($slideXml.NameTable)
         $ns.AddNamespace('p','http://schemas.openxmlformats.org/presentationml/2006/main')
         $ns.AddNamespace('a','http://schemas.openxmlformats.org/drawingml/2006/main')
         $ns.AddNamespace('r','http://schemas.openxmlformats.org/officeDocument/2006/relationships')
-        $pictures=@($slideXml.SelectNodes("//p:pic[p:nvPicPr/p:cNvPr[@name='LectureForge_White_Avatar_Slide01']]",$ns))
+        $shapeName='LectureForge_White_Avatar_Slide'+$SlideNumber.ToString('00')
+        $pictures=@($slideXml.SelectNodes("//p:pic[p:nvPicPr/p:cNvPr[@name='$shapeName']]",$ns))
         if($pictures.Count -ne 1){throw 'Expected one approved media picture node.'}
         $picture=$pictures[0]
         $crop=$picture.SelectSingleNode('.//a:srcRect',$ns)
@@ -48,7 +55,7 @@ function Test-V2RecordingPackage([string]$OutputPath,[string]$ApprovedVideoSha25
         foreach($relationship in $rels.DocumentElement.ChildNodes){
             if($relationshipIds -contains $relationship.GetAttribute('Id') -and $relationship.GetAttribute('Type') -match '/(video|media)$'){
                 if($relationship.GetAttribute('TargetMode') -eq 'External'){throw 'Video relationship is external.'}
-                $uri=[Uri]::new([Uri]'http://package.invalid/ppt/slides/slide1.xml',$relationship.GetAttribute('Target'))
+                $uri=[Uri]::new([Uri]('http://package.invalid/'+$slidePart),$relationship.GetAttribute('Target'))
                 if($uri.Host -ne 'package.invalid'){throw 'Unexpected package target.'}
                 $mediaTargets+=[Uri]::UnescapeDataString($uri.AbsolutePath.TrimStart('/'))
             }
@@ -252,3 +259,83 @@ function New-V2RecordingProof {
 }
 
 Export-ModuleMember -Function New-V2RecordingProof,Test-V2RecordingPackage
+function New-V2RecordingBatch {
+ param([string]$Source,[string]$SourceSha256,[string]$Output,[string]$EvidenceDirectory,[object[]]$Avatars,[scriptblock]$Progress)
+ $ErrorActionPreference='Stop'
+ $sourceAsset=Get-V2Asset $Source
+ if($sourceAsset.sha256 -ne $SourceSha256){throw 'Source PPTX hash mismatch.'}
+ $outputPath=[IO.Path]::GetFullPath($Output);$ev=[IO.Path]::GetFullPath($EvidenceDirectory)
+ if($outputPath -eq $sourceAsset.path -or (Test-Path $outputPath) -or $outputPath.Length -ge 240 -or $ev.Length -ge 210){throw 'Use a distinct new derivative and short evidence paths.'}
+ [void][IO.Directory]::CreateDirectory($ev);[void][IO.Directory]::CreateDirectory((Split-Path $outputPath))
+ $info=Get-V2DeckInfo $Source;$sw=$info.width_emu/12700.0;$sh=$info.height_emu/12700.0
+ $map=@{};foreach($a in $Avatars){if($map.ContainsKey([int]$a.slide) -or $a.slide -lt 1 -or $a.slide -gt $info.slide_count){throw 'Duplicate or invalid avatar slide.'};if((Get-V2Asset $a.path).sha256 -ne $a.sha256){throw "Slide $($a.slide) avatar hash mismatch."};$map[[int]$a.slide]=$a}
+ [IO.File]::Copy($sourceAsset.path,$outputPath,$false)
+ if((Get-V2Asset $outputPath).sha256 -ne $SourceSha256){throw 'Derivative copy hash mismatch.'}
+ $app=$null;$deck=$null;$wasRunning=@(Get-Process POWERPNT -ErrorAction SilentlyContinue).Count -gt 0
+ $report=[ordered]@{source_sha256_before=$SourceSha256;source_sha256_after=$null;slide_count=$info.slide_count;avatar_count=$Avatars.Count;slides=@();save_calls=0;reopened=$false;passed=$false;provider_calls=0}
+ $signatures=@{};$renders=@{};$stage='Opening PowerPoint';$number=0
+ try{
+  & $Progress $stage 0
+  $app=New-Object -ComObject PowerPoint.Application
+  $deck=$app.Presentations.Open($outputPath,$false,$false,$false)
+  for($n=1;$n -le $deck.Slides.Count;$n++){
+   $number=$n;$slide=$deck.Slides.Item($n);$signatures[$n]=Get-RecordingSlideSignature $slide
+   if($map.ContainsKey($n) -and @($slide.Shapes|Where-Object Type -eq 16).Count){throw "Slide $n source already contains media; ambiguous playback."}
+   $png=Join-Path $ev "b$n.png";$slide.Export($png,'PNG',1920,1080);$renders[$n]=(Get-V2Asset $png).sha256
+  }
+  $done=0
+  foreach($a in $Avatars){
+   $number=[int]$a.slide;$stage='Inserting avatars';$done++;& $Progress $stage $number
+   $p=$a.placement;$slide=$deck.Slides.Item($number)
+   $m=$slide.Shapes.AddMediaObject2($a.path,$false,$true,($p.left*$sw),($p.top*$sh),($p.width*$sw),($p.height*$sh))
+   $m.Name='LectureForge_White_Avatar_Slide'+$number.ToString('00');$m.LockAspectRatio=0
+   $m.Left=$p.left*$sw;$m.Top=$p.top*$sh;$m.Width=$p.width*$sw;$m.Height=$p.height*$sh
+   $m.Line.Visible=0;$m.Shadow.Visible=0;$m.AnimationSettings.Animate=-1;$m.AnimationSettings.PlaySettings.PlayOnEntry=-1
+   for($i=1;$i -le $slide.TimeLine.MainSequence.Count;$i++){$effect=$slide.TimeLine.MainSequence.Item($i);if($effect.Shape.Id -eq $m.Id -and $effect.EffectType -eq 83){$effect.Timing.TriggerType=2}}
+  }
+  $number=0;$stage='Saving';& $Progress $stage 0
+  $deck.Save();$report.save_calls++;$deck.Close();[void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($deck);$deck=$null
+  $stage='Validating';& $Progress $stage 0
+  $deck=$app.Presentations.Open($outputPath,$true,$false,$false);$report.reopened=$true
+  if($deck.Slides.Count -ne $info.slide_count){throw 'Slide count changed.'}
+  for($n=1;$n -le $deck.Slides.Count;$n++){
+   $number=$n;& $Progress $stage $n;$slide=$deck.Slides.Item($n);$exclude=-1
+   $result=[ordered]@{slide=$n;produced=$map.ContainsKey($n);native_preserved=$false;native_render_identical=$false}
+   if($map.ContainsKey($n)){
+    $a=$map[$n];$p=$a.placement;$media=@($slide.Shapes|Where-Object Type -eq 16)
+    if($media.Count -ne 1 -or $media[0].Name -ne ('LectureForge_White_Avatar_Slide'+$n.ToString('00'))){throw "Slide $n expected exactly one named media object."}
+    $m=$media[0];$exclude=[int]$m.Id
+    foreach($key in 'left','top','width','height'){$scale=if($key -in 'left','width'){$sw}else{$sh};if([math]::Abs($m.$key-$p.$key*$scale) -gt .002){throw "Slide $n placement mismatch: $key"}}
+    $auto=$false;for($i=1;$i -le $slide.TimeLine.MainSequence.Count;$i++){$effect=$slide.TimeLine.MainSequence.Item($i);if($effect.Shape.Id -eq $m.Id -and $effect.EffectType -eq 83 -and $effect.Timing.TriggerType -eq 2){$auto=$true}}
+    if(-not $auto -or $m.AnimationSettings.PlaySettings.PlayOnEntry -ne -1 -or $m.Line.Visible -ne 0 -or $m.Shadow.Visible -ne 0){throw "Slide $n autoplay/border/shadow mismatch."}
+    $left=[single]$m.Left;$width=[single]$m.Width;$m.Left=[single]($left+1);$m.Width=[single]($width*.95)
+    if([math]::Abs($m.Left-$left-1) -gt .002 -or [math]::Abs($m.Width-$width*.95) -gt .002){throw "Slide $n independent move/resize failed."}
+    $m.Left=[single]$left;$m.Width=[single]$width;$m.Visible=0
+    $result.independent_move_resize=$true;$result.autoplay=$true;$result.placement=$p
+   }
+   $result.native_preserved=((Get-RecordingSlideSignature $slide $exclude) -eq $signatures[$n])
+   $png=Join-Path $ev "c$n.png";$slide.Export($png,'PNG',1920,1080);$result.native_render_identical=((Get-V2Asset $png).sha256 -eq $renders[$n])
+   if($map.ContainsKey($n)){$m.Visible=-1}
+   if(-not $result.native_preserved -or -not $result.native_render_identical){throw "Slide $n native content changed."}
+   $report.slides+=,$result
+  }
+  # The movement/visibility probes are in-memory only; never save validation changes.
+  $deck.Saved=-1;$deck.Close();[void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($deck);$deck=$null
+  foreach($a in $Avatars){$number=[int]$a.slide;& $Progress 'Validating embedded media' $number
+   $package=Test-V2RecordingPackage $outputPath $a.sha256 (Join-Path $ev "s$number") $number
+   $row=$report.slides[$number-1];$row.package=$package;$row.narration_sha256=$a.narration.sha256;$row.preparation=$a.preparation
+  }
+  $report.source_sha256_after=(Get-V2Asset $Source).sha256
+  if($report.source_sha256_after -ne $SourceSha256){throw 'CANONICAL SOURCE HASH CHANGED'}
+  $report.output_sha256=(Get-V2Asset $outputPath).sha256;$report.passed=$true
+ }catch{$report.error="Stage $stage, Slide $number : $($_.Exception.Message)";$report.error_location=$_.ScriptStackTrace;throw $report.error}
+ finally{
+  if($deck){try{$deck.Saved=-1;$deck.Close()}catch{}}
+  if($app -and -not $wasRunning){try{if($app.Presentations.Count -eq 0){$app.Quit()}}catch{}}
+  foreach($com in @($deck,$app)){if($null -ne $com){[void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($com)}}
+  $report.source_sha256_after=(Get-V2Asset $Source).sha256;Write-V2Json (Join-Path $ev 'validation.json') $report
+  [GC]::Collect();[GC]::WaitForPendingFinalizers()
+ }
+ [pscustomobject]$report
+}
+Export-ModuleMember -Function New-V2RecordingBatch

@@ -19,7 +19,7 @@ try{
   if(Test-Path $runtime){
    $old=Read-LFSharedJson $runtime
    if($old.status -eq 'running'){
-    try{$health=Invoke-RestMethod -UseBasicParsing -Uri ($old.url+'api/health') -TimeoutSec 2;$running=($health.instance -eq $old.instance -and $health.ready -and $health.milestone -eq 'D')}catch{}
+    try{$health=Invoke-RestMethod -UseBasicParsing -Uri ($old.url+'api/health') -TimeoutSec 2;$running=($health.instance -eq $old.instance -and $health.ready -and $health.milestone -eq 'E')}catch{}
     if($running){$url=$old.url}else{
      # Signal only the old instance; never terminate unrelated/user-owned processes.
      [IO.File]::WriteAllText((Join-Path $root ($old.instance+'.stop')),'stop')
@@ -32,8 +32,8 @@ try{
    $instance=[guid]::NewGuid().ToString('N').Substring(0,12)
    $exe=Join-Path $PSHOME 'powershell.exe'
    $common='-NoProfile -ExecutionPolicy Bypass -File '
-   $worker=Start-Process $exe -WindowStyle Hidden -PassThru -RedirectStandardError (Join-Path $root "$instance.worker-error.log") -RedirectStandardOutput (Join-Path $root "$instance.worker.log") -ArgumentList ($common+'"'+(Join-Path $PSScriptRoot 'studio/Worker.ps1')+'" -RuntimeRoot "'+$root+'" -Instance '+$instance)
-   $server=Start-Process $exe -WindowStyle Hidden -PassThru -RedirectStandardError (Join-Path $root "$instance.server-error.log") -RedirectStandardOutput (Join-Path $root "$instance.server.log") -ArgumentList ($common+'"'+(Join-Path $PSScriptRoot 'studio/Server.ps1')+'" -RuntimeRoot "'+$root+'" -Instance '+$instance+' -Port '+$Port+' -WorkerPid '+$worker.Id)
+   $worker=Start-Process $exe -PassThru -RedirectStandardError (Join-Path $root "$instance.worker-error.log") -RedirectStandardOutput (Join-Path $root "$instance.worker.log") -ArgumentList ($common+'"'+(Join-Path $PSScriptRoot 'studio/Worker.ps1')+'" -RuntimeRoot "'+$root+'" -Instance '+$instance)
+   $server=Start-Process $exe -PassThru -RedirectStandardError (Join-Path $root "$instance.server-error.log") -RedirectStandardOutput (Join-Path $root "$instance.server.log") -ArgumentList ($common+'"'+(Join-Path $PSScriptRoot 'studio/Server.ps1')+'" -RuntimeRoot "'+$root+'" -Instance '+$instance+' -Port '+$Port+' -WorkerPid '+$worker.Id)
    $url="http://127.0.0.1:$Port/";$ready=$false
    for($i=0;$i -lt 40;$i++){
     Start-Sleep -Milliseconds 250
