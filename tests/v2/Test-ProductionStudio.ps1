@@ -46,7 +46,7 @@ $rejected=$false;try{PostJson 'api/generate' @{}|Out-Null}catch{$rejected=$true}
 $rejected=$false;try{ConvertFrom-LFScripts "## Slide 2`na`n## Slide 2`nb`n" 14|Out-Null}catch{$rejected=$true};Check 'Duplicate script headings rejected' $rejected
 $saved=(Get-FileHash (Join-Path (Get-LFProjectPath $root $id) 'project.json')).Hash
 $null=PostJson 'api/stop' @{}
-for($i=0;$i -lt 40;$i++){Start-Sleep -Milliseconds 250;$r=Get-Content -Raw (Join-Path $root 'runtime.json')|ConvertFrom-Json;if($r.status -eq 'stopped'){break}}
+for($i=0;$i -lt 40;$i++){Start-Sleep -Milliseconds 250;$r=Read-LFSharedJson (Join-Path $root 'runtime.json');if($r.status -eq 'stopped'){break}}
 Check 'Clean stop persisted and worker stopped' ($r.status -eq 'stopped' -and (Get-Content -Raw (Join-Path $root ($runtime.instance+'.worker.json'))|ConvertFrom-Json).stage -eq 'stopped')
 & (Join-Path $repo 'Start-LectureForge.ps1') -RuntimeRoot $root -Port $Port -NoBrowser
 $script:token=(GetJson 'api/bootstrap').token;$restored=GetJson "api/project?id=$id"

@@ -17,7 +17,7 @@ $('script-file').onchange=()=>action(async()=>{$('script-import').value=await $(
 $('import').onclick=()=>action(async()=>{await save();renderProject(await request('/api/save?id='+project.id,{version:project.version,script_import:$('script-import').value}));message('Scripts imported and saved.');});
 for(const [id,value] of [['enable-all',true],['disable-all',false]])$(id).onclick=()=>{for(const row of $('slides').children){row.querySelector('.enabled').checked=value;row.classList.toggle('disabled',!value);}changed();};
 $('folder').onclick=()=>action(()=>request('/api/folder?id='+project.id,{}));
-$('stop').onclick=()=>action(async()=>{await save();await request('/api/stop',{});dirty=false;stopped=true;document.querySelectorAll('button,input,textarea,select').forEach(x=>x.disabled=true);message('LectureForge stopped. Your projects are saved. Run Start-LectureForge.ps1 to return.');});
+$('stop').onclick=()=>action(async()=>{await save();await request('/api/stop',{});dirty=false;stopped=true;document.querySelectorAll('button,input,textarea,select').forEach(x=>x.disabled=true);message('LectureForge stopped. Your projects are saved. Double-click LectureForge.cmd to return.');});
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
 action(async()=>{await refresh();const id=localStorage.getItem('lectureforge-project');if(id&&projects.some(p=>p.id===id))await openProject(id);});
 

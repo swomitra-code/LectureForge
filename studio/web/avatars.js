@@ -18,7 +18,7 @@ async function loadAvatarStatus(){
     if(j.video_id&&j.provider_status!=='failed')actions.push(['resume','Resume known HeyGen job']);
     if(j.video_id&&j.provider_status==='completed')actions.push(['download','Retry avatar download']);
     if(j.raw_path)actions.push(['convert','Retry white-avatar conversion']);
-    if(j.output_path)actions.push(['validate','Retry local validation']);
+    if(j.output_path||j.row.reusable_avatar)actions.push(['validate','Retry local validation']);
     if(j.exception_kind==='submission uncertain'&&!j.video_id)actions.push(['reconcile','Reconcile existing job ID']);
     for(const [kind,text] of actions){const b=document.createElement('button');b.className='secondary';b.textContent=text;b.onclick=()=>action(async()=>{const body={job:j.id,action:kind};if(kind==='reconcile'){body.video_id=prompt('Existing HeyGen job ID from the provider account. This does not create a replacement.');if(!body.video_id)return;}await request('/api/avatar-retry?id='+project.id,body);await loadAvatarStatus();});row.append(b);}
    }

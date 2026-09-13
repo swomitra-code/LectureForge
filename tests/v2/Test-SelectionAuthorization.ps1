@@ -83,7 +83,7 @@ function GetJson($Path){Invoke-RestMethod -UseBasicParsing -Uri ($url+$Path) -Ti
 function PostJson($Path,$Data){Invoke-RestMethod -UseBasicParsing -Method Post -Uri ($url+$Path) -Headers @{'X-LF-Token'=$script:token} -ContentType application/json -Body ([Text.Encoding]::UTF8.GetBytes(($Data|ConvertTo-Json -Depth 20))) -TimeoutSec 30}
 function Restart {
  $null=PostJson 'api/stop' @{}
- for($i=0;$i -lt 60;$i++){Start-Sleep -Milliseconds 250;$runtime=Get-Content -Raw (Join-Path $root 'runtime.json')|ConvertFrom-Json;if($runtime.status -eq 'stopped'){break}}
+ for($i=0;$i -lt 60;$i++){Start-Sleep -Milliseconds 250;$runtime=Read-LFSharedJson (Join-Path $root 'runtime.json');if($runtime.status -eq 'stopped'){break}}
  if($runtime.status -ne 'stopped'){throw 'Server did not stop.'}
  & (Join-Path $repo 'Start-LectureForge.ps1') -RuntimeRoot $root -Port $Port -NoBrowser
  $script:token=(GetJson 'api/bootstrap').token

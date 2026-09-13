@@ -71,13 +71,21 @@ function Set-LFAvatarPause($Root,$Id,[bool]$Paused){Invoke-LFNarrationLock $Root
 function Repair-LFAvatarJob($Root,$Id,$Job,$Action,$VideoId=$null){
  Invoke-LFNarrationLock $Root $Id {param($dir)
   $j=Read-LFAvatarJob $dir $Job;if($j.lease){throw 'Work is active. Wait for completion.'};if($j.stage -ne 'Exception'){throw 'Only an exception may be retried.'}
-  $null=Assert-LFAvatarInputs $Root $Id $dir $j.authorization
+  $authorization=Assert-LFAvatarInputs $Root $Id $dir $j.authorization
+  Assert-LFAvatarJobBinding $authorization.snapshot $j
   switch($Action){
    'resume'{if(-not $j.video_id -or $j.provider_status -eq 'failed'){throw 'No resumable provider job.'};$j.stage='HeyGen Processing'}
    'reconcile'{if(-not $j.submission_intent -or $j.video_id -or $VideoId -notmatch '^[a-zA-Z0-9_-]{8,100}$'){throw 'Enter the existing provider job ID; this never submits a replacement.'};$j.video_id=$VideoId;$j.stage='HeyGen Processing'}
    'download'{if(-not $j.video_id -or $j.provider_status -ne 'completed'){throw 'No completed job to download.'};$j.stage='HeyGen Processing'}
    'convert'{if(-not $j.raw_path){throw 'No downloaded avatar.'};$j.stage='Avatar Downloaded'}
-   'validate'{if(-not $j.output_path){throw 'No white avatar to validate.'};$j.stage='Validating'}
+   'validate'{
+    if(-not $j.output_path -and $j.row.reusable_avatar){
+     $reuse=$j.row.reusable_avatar;$path=Resolve-LFReusableAsset $dir $reuse.path
+     if((Get-FileHash $path).Hash -ne $reuse.sha256){throw 'Reusable avatar hash mismatch.'}
+     $j.output_path=$reuse.path;$j.output_sha256=$reuse.sha256
+    }
+    if(-not $j.output_path){throw 'No white avatar to validate.'};$j.stage='Validating'
+   }
    default{throw 'No paid retry action is supported. Review and explicitly authorize replacements.'}
   };$j.error=$null;$j.exception_kind=$null;$j.next_poll_utc=$null;Save-LFAvatarJob $dir $j
  }

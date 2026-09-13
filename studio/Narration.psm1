@@ -10,7 +10,9 @@ function Invoke-LFNarrationLock([string]$Root,[string]$Id,[scriptblock]$Action){
  $dir=Get-LFProjectPath $Root $Id
  $mutex=[Threading.Mutex]::new($false,('Local\LFN-'+(Get-LFTextHash $dir).Substring(0,24)))
  $held=$false
- try{try{$held=$mutex.WaitOne(10000)}catch [Threading.AbandonedMutexException]{$held=$true};if(-not $held){throw 'Narration state busy. Try again.'}; & $Action $dir}finally{if($held){$mutex.ReleaseMutex()};$mutex.Dispose()}
+ # Full-lecture asset verification can hold this lock beyond ten seconds on local disks.
+ # Allow bounded contention between the three workers and UI; never retry provider calls.
+ try{try{$held=$mutex.WaitOne(60000)}catch [Threading.AbandonedMutexException]{$held=$true};if(-not $held){throw 'Narration state busy. Try again.'}; & $Action $dir}finally{if($held){$mutex.ReleaseMutex()};$mutex.Dispose()}
 }
 function Read-LFNarrationFile([string]$Dir){
  $file=Join-Path $Dir 'narration.json'
