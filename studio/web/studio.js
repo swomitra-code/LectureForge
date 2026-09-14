@@ -21,7 +21,12 @@ $('stop').onclick=()=>action(async()=>{await save();await request('/api/stop',{}
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
 action(async()=>{await refresh();const id=localStorage.getItem('lectureforge-project');if(id&&projects.some(p=>p.id===id))await openProject(id);});
 
-async function loadNarration(){if(!project||stopped)return;const id=project.id;const d=await request('/api/narration?id='+id);if(project?.id!==id)return;if(d.project_version!==project.version){if(dirty){message('Project changed in another window. Reload before reviewing or saving.',true);return;}renderProject(await request('/api/project?id='+id));return;}narration=d;renderNarration();}
+// Normalize at the response boundary for older servers/saved narration shapes.
+function normalizeTakes(value){
+ const items=Array.isArray(value)?value:value&&typeof value==='object'?(Object.hasOwn(value,'number')?[value]:Object.values(value)):[];
+ return items.filter(t=>t&&typeof t==='object'&&[1,2,3].includes(t.number)&&typeof t.state==='string');
+}
+async function loadNarration(){if(!project||stopped)return;const id=project.id;const d=await request('/api/narration?id='+id);if(project?.id!==id)return;if(d.project_version!==project.version){if(dirty){message('Project changed in another window. Reload before reviewing or saving.',true);return;}renderProject(await request('/api/project?id='+id));return;}narration={...d,slides:d.slides.map(s=>({...s,takes:normalizeTakes(s.takes)}))};renderNarration();}
 function renderNarration(){
  const enabled=narration.slides.filter(s=>s.enabled);const ready=enabled.filter(s=>s.takes.length===3&&s.takes.every(t=>t.state==='ready')).length;
  $('progress').textContent=`${ready} / ${enabled.length} slides ready | ${narration.provider_calls} ElevenLabs requests recorded`;

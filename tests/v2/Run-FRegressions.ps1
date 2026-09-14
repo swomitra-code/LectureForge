@@ -10,6 +10,8 @@ function StopFixture([int]$Port){
  $url="http://127.0.0.1:$Port/";$b=Invoke-RestMethod ($url+'api/bootstrap') -TimeoutSec 60
  $null=Invoke-RestMethod -Method Post ($url+'api/stop') -Headers @{'X-LF-Token'=$b.token} -ContentType application/json -Body '{}' -TimeoutSec 60
 }
+Run 'Test-NarrationCues.ps1' @()
+Run 'Test-ScriptImport.ps1' @('-RuntimeRoot',(Join-Path $repo 'work/script-import-tests'))
 if($From -eq 'A'){
  $a=Join-Path $env:LOCALAPPDATA ($Prefix+'A');Run 'Test-ProductionStudio.ps1' @('-RuntimeRoot',$a,'-Port',8801);StopFixture 8801
  $b=Join-Path $env:LOCALAPPDATA ($Prefix+'B');Run 'Test-NarrationStudio.ps1' @('-RuntimeRoot',$b,'-Port',8802);StopFixture 8802

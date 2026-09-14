@@ -41,7 +41,7 @@ try{
   if($child -and $child.HasExited){
    if($task -and $task.ContainsKey('attempt')){
     Invoke-LFNarrationLock $root $task.id {param($dir)
-     $state=Read-LFNarrationFile $dir;$r=@($state.revisions|Where-Object id -eq $task.revision)[0];$t=$r.takes[$task.take-1]
+     $state=Read-LFNarrationFile $dir;$r=@($state.revisions|Where-Object id -eq $task.revision)[0];$t=@($r.takes|Where-Object number -eq $task.take)|Select-Object -First 1
      if($t.state -in @('dispatched','generating')){$t.state='uncertain';$t.attempts[-1].state='uncertain';$t.attempts[-1].error='Executor exited without a final result. No automatic retry.';Write-LFJson (Join-Path $dir 'narration.json') $state}
     }
    }

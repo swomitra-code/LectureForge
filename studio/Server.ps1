@@ -167,7 +167,7 @@ try{
     $dir=Get-LFProjectPath $root $query['id'];$state=Read-LFNarrationFile $dir
     $r=@($state.revisions|Where-Object id -eq $query['revision'])[0];$n=[int]$query['take']
     if(-not $r -or $n -notin 1,2,3){throw 'Unknown narration take.'}
-    $t=$r.takes[$n-1];if(-not (Test-LFTake $dir $t)){throw 'Narration media hash mismatch or take unavailable.'}
+    $t=@($r.takes|Where-Object number -eq $n)|Select-Object -First 1;if(-not (Test-LFTake $dir $t)){throw 'Narration media hash mismatch or take unavailable.'}
     $file=Resolve-LFNarrationAsset $dir $t.asset.path
     Send-Audio $stream $file $headers['range']
    }elseif($method -eq 'POST' -and $path -eq '/api/new'){

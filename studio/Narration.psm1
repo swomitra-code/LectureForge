@@ -16,7 +16,27 @@ function Invoke-LFNarrationLock([string]$Root,[string]$Id,[scriptblock]$Action){
 }
 function Read-LFNarrationFile([string]$Dir){
  $file=Join-Path $Dir 'narration.json'
- if(Test-Path $file){Get-Content -Raw -Encoding UTF8 $file|ConvertFrom-Json}else{[pscustomobject]@{schema='lectureforge-narration-1';revisions=@()}}
+ $state=if(Test-Path $file){Get-Content -Raw -Encoding UTF8 $file|ConvertFrom-Json}else{[pscustomobject]@{schema='lectureforge-narration-1';revisions=@()}}
+ foreach($r in $state.revisions){
+  # Read-time migration only. Import never rewrites narration history or queues work.
+  $raw=$r.takes
+  $items=@(if($raw -is [array]){$raw}elseif($null -ne $raw){
+   if($raw.PSObject.Properties.Name -contains 'number'){$raw}
+   elseif($raw -is [pscustomobject]){$raw.PSObject.Properties.Value}
+   else{$raw}
+  })
+  $valid=@();$legacy=@()
+  foreach($t in $items){
+   if($null -ne $t -and $t -is [pscustomobject] -and $t.number -in 1,2,3 -and $t.state -is [string]){$valid+= $t}
+   elseif($null -ne $t){$legacy+= $t}
+  }
+  # Preserve unrecognized data for recovery, including on later narration writes.
+  if($legacy.Count){
+   $r|Add-Member -NotePropertyName takes_legacy -NotePropertyValue (@($r.takes_legacy)+@($raw) | Where-Object {$null -ne $_}) -Force
+  }
+  $r|Add-Member -NotePropertyName takes -NotePropertyValue $valid -Force
+ }
+ $state
 }
 function Get-LFCurrentRevision($State,$Project,$Slide){
  $binding=Get-LFBinding $Project $Slide
@@ -37,7 +57,9 @@ function Get-LFNarration([string]$Root,[string]$Id){
   $p=Read-LFProject $Root $Id;$state=Read-LFNarrationFile $dir
   $slides=@(foreach($s in $p.slides){
    $r=Get-LFCurrentRevision $state $p $s
-   [pscustomobject]@{number=$s.number;enabled=$s.enabled;revision=if($r){$r.id}else{$null};selected_take=if($r){$r.selected_take}else{$null};takes=if($r){@($r.takes)}else{@()};binding=Get-LFBinding $p $s}
+   # The array subexpression must surround the conditional: PowerShell otherwise
+   # unwraps zero/one items (Windows PowerShell serializes the empty result as {}).
+   [pscustomobject]@{number=$s.number;enabled=$s.enabled;revision=if($r){$r.id}else{$null};selected_take=if($r){$r.selected_take}else{$null};takes=@(if($r){$r.takes});binding=Get-LFBinding $p $s}
   })
   @{slides=$slides;project_version=$p.version;provider_calls=@($state.revisions.takes.attempts|Where-Object {$_.submitted_utc}).Count;heygen_calls=0}
  }
@@ -77,7 +99,7 @@ function Set-LFNarrationSelection([string]$Root,[string]$Id,[int]$Slide,[string]
  Invoke-LFNarrationLock $Root $Id {param($dir)
   $p=Read-LFProject $Root $Id;$state=Read-LFNarrationFile $dir;$s=@($p.slides|Where-Object number -eq $Slide)[0];$r=Get-LFCurrentRevision $state $p $s
   if(-not $r -or $r.id -ne $Revision -or $Take -notin 0,1,2,3){throw 'Narration revision changed. Reload this slide.'}
-  if($Take -ne 0 -and -not (Test-LFTake $dir $r.takes[$Take-1])){throw 'Take is not verified and ready.'}
+  if($Take -ne 0 -and -not (Test-LFTake $dir (@($r.takes|Where-Object number -eq $Take)|Select-Object -First 1))){throw 'Take is not verified and ready.'}
   $selected=if($Take){$Take}else{$null}
   if($r.selected_take -ne $selected){
    if($state.PSObject.Properties.Name -notcontains 'intent_revision'){$state|Add-Member -NotePropertyName intent_revision -NotePropertyValue 0}
@@ -92,7 +114,7 @@ function Retry-LFNarration([string]$Root,[string]$Id,[string]$Revision,[int]$Tak
   if(-not $r -or $Take -notin 1,2,3){throw 'Unknown take.'}
   $s=@($p.slides|Where-Object number -eq $r.slide_number)[0]
   if((Get-LFCurrentRevision $state $p $s).id -ne $Revision){throw 'Cannot retry an obsolete narration revision.'}
-  $t=$r.takes[$Take-1]
+  $t=@($r.takes|Where-Object number -eq $Take)|Select-Object -First 1
   if($t.state -ne 'failed'){throw 'Only a confirmed rejected take can be retried. Uncertain attempts require investigation.'}
   $t.attempts+= (New-LFAttempt $r $t);$t.state='queued';Write-LFJson (Join-Path $dir 'narration.json') $state
  }
