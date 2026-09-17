@@ -11,6 +11,10 @@ function StopFixture([int]$Port){
  $null=Invoke-RestMethod -Method Post ($url+'api/stop') -Headers @{'X-LF-Token'=$b.token} -ContentType application/json -Body '{}' -TimeoutSec 60
 }
 Run 'Test-NarrationCues.ps1' @()
+& node (Join-Path $PSScriptRoot 'Test-AvatarProductionUI.cjs')
+if($LASTEXITCODE){throw 'Avatar production UI regression failed'}
+Run 'Test-NarrationSettings.ps1' @()
+Run 'Test-NarrationRegeneration.ps1' @()
 Run 'Test-ScriptImport.ps1' @('-RuntimeRoot',(Join-Path $repo 'work/script-import-tests'))
 if($From -eq 'A'){
  $a=Join-Path $env:LOCALAPPDATA ($Prefix+'A');Run 'Test-ProductionStudio.ps1' @('-RuntimeRoot',$a,'-Port',8801);StopFixture 8801

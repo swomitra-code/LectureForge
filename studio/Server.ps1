@@ -47,7 +47,7 @@ function Send-Audio($Stream,[string]$Path,[string]$Range){
 try{
  $listener.Start()
  [Console]::Out.WriteLine('Loopback listener started.')
- Write-LFJson (Join-Path $root 'runtime.json') @{instance=$Instance;server_pid=$PID;worker_pid=$WorkerPid;port=$Port;url="http://127.0.0.1:$Port/";status='running';milestone='E'}
+ Write-LFJson (Join-Path $root 'runtime.json') @{instance=$Instance;server_pid=$PID;worker_pid=$WorkerPid;port=$Port;url="http://127.0.0.1:$Port/";status='running';milestone='E';api_version=2}
  while(-not $stopping -and -not (Test-Path (Join-Path $root "$Instance.stop"))){
   if(-not (Get-Process -Id $WorkerPid -ErrorAction SilentlyContinue)){
    # Recover only this instance's worker. Durable leases protect existing children.
@@ -55,7 +55,7 @@ try{
    $args='-NoProfile -ExecutionPolicy Bypass -File "'+(Join-Path $PSScriptRoot 'Worker.ps1')+'" -RuntimeRoot "'+$root+'" -Instance '+$Instance
    $recovered=Start-Process (Join-Path $PSHOME 'powershell.exe') -PassThru -RedirectStandardOutput ($log+'.log') -RedirectStandardError ($log+'.err') -ArgumentList $args
    $WorkerPid=$recovered.Id
-   Write-LFJson (Join-Path $root 'runtime.json') @{instance=$Instance;server_pid=$PID;worker_pid=$WorkerPid;port=$Port;url="http://127.0.0.1:$Port/";status='running';milestone='E'}
+   Write-LFJson (Join-Path $root 'runtime.json') @{instance=$Instance;server_pid=$PID;worker_pid=$WorkerPid;port=$Port;url="http://127.0.0.1:$Port/";status='running';milestone='E';api_version=2}
   }
   if(-not $listener.Pending()){Start-Sleep -Milliseconds 100;continue}
   $client=$listener.AcceptTcpClient();$stream=$client.GetStream();$stream.ReadTimeout=2000;$stream.WriteTimeout=10000
@@ -83,9 +83,9 @@ try{
    if($method -eq 'GET' -and $path -eq '/api/health'){
     $beatFile=Join-Path $root "$Instance.worker.json"
     $beat=if(Test-Path $beatFile){Read-WorkerHeartbeat $beatFile}else{[pscustomobject]@{stage='starting';utc=[DateTime]::UtcNow.ToString('o')}}
-    Reply $stream 200 @{instance=$Instance;ready=($beat.stage -in @('idle','working') -and ([DateTime]::UtcNow-[DateTimeOffset]::Parse($beat.utc).UtcDateTime).TotalSeconds -lt 5);worker=$beat.stage;milestone='E'}
+    Reply $stream 200 @{instance=$Instance;ready=($beat.stage -in @('idle','working') -and ([DateTime]::UtcNow-[DateTimeOffset]::Parse($beat.utc).UtcDateTime).TotalSeconds -lt 5);worker=$beat.stage;milestone='E';api_version=2}
    }elseif($method -eq 'GET' -and $path -eq '/api/bootstrap'){
-    Reply $stream 200 @{token=$token;root=(Join-Path $root 'Projects');presets=@(Get-LFPreset);projects=@(Get-LFProjects $root);milestone='E'}
+    Reply $stream 200 @{token=$token;root=(Join-Path $root 'Projects');presets=@(Get-LFPreset);projects=@(Get-LFProjects $root);milestone='E';api_version=2}
    }elseif($method -eq 'GET' -and $path -eq '/api/project'){
     Reply $stream 200 (Read-LFProject $root $query['id'])
    }elseif($method -eq 'GET' -and $path -eq '/api/assembly-ready'){
@@ -121,6 +121,11 @@ try{
     $data=[Text.Encoding]::UTF8.GetString($body)|ConvertFrom-Json
     Repair-LFAvatarJob $root $query['id'] $data.job $data.action $data.video_id
     Reply $stream 200 @{saved=$true}
+   }elseif($method -eq 'GET' -and $path -eq '/api/avatar-replacement'){
+    Reply $stream 200 (Get-LFAvatarReplacementSummary $root $query['id'] $query['job'])
+   }elseif($method -eq 'POST' -and $path -eq '/api/avatar-replacement'){
+    $data=[Text.Encoding]::UTF8.GetString($body)|ConvertFrom-Json
+    Reply $stream 200 (Confirm-LFAvatarReplacement $root $query['id'] $data.job ($data.confirm -eq $true) $data.expected)
    }elseif($method -eq 'GET' -and $path -eq '/api/selections'){
     Reply $stream 200 (Get-LFSelectionReview $root $query['id'])
    }elseif($method -eq 'POST' -and $path -eq '/api/selection-review'){
@@ -144,9 +149,21 @@ try{
     if($data.confirm -ne $true){throw 'Explicit narration generation confirmation required.'}
     Add-LFNarrationBatch $root $query['id'] $data.version
     Reply $stream 200 (Get-LFNarration $root $query['id'])
+   }elseif($method -eq 'POST' -and $path -eq '/api/narration-test'){
+    $data=[Text.Encoding]::UTF8.GetString($body)|ConvertFrom-Json
+    $preview=Add-LFNarrationPreview $root $query['id'] $data.slide $data.version $data.settings $data.text
+    Reply $stream 200 @{revision=$preview;state='queued'}
    }elseif($method -eq 'POST' -and $path -eq '/api/narration-select'){
     $data=[Text.Encoding]::UTF8.GetString($body)|ConvertFrom-Json
     Set-LFNarrationSelection $root $query['id'] $data.slide $data.revision $data.take
+    Reply $stream 200 (Get-LFNarration $root $query['id'])
+   }elseif($method -eq 'POST' -and $path -eq '/api/narration-regenerate'){
+    $data=[Text.Encoding]::UTF8.GetString($body)|ConvertFrom-Json
+    Add-LFNarrationRegeneration $root $query['id'] $data.revision $data.take $data.attempt
+    Reply $stream 200 (Get-LFNarration $root $query['id'])
+   }elseif($method -eq 'POST' -and $path -eq '/api/narration-restore'){
+    $data=[Text.Encoding]::UTF8.GetString($body)|ConvertFrom-Json
+    Restore-LFNarrationTake $root $query['id'] $data.revision $data.take
     Reply $stream 200 (Get-LFNarration $root $query['id'])
    }elseif($method -eq 'POST' -and $path -eq '/api/narration-retry'){
     $data=[Text.Encoding]::UTF8.GetString($body)|ConvertFrom-Json
@@ -166,7 +183,7 @@ try{
    }elseif($method -eq 'GET' -and $path -eq '/api/audio'){
     $dir=Get-LFProjectPath $root $query['id'];$state=Read-LFNarrationFile $dir
     $r=@($state.revisions|Where-Object id -eq $query['revision'])[0];$n=[int]$query['take']
-    if(-not $r -or $n -notin 1,2,3){throw 'Unknown narration take.'}
+    if(-not $r -or $n -notin 1,2,3,4,5){throw 'Unknown narration take.'}
     $t=@($r.takes|Where-Object number -eq $n)|Select-Object -First 1;if(-not (Test-LFTake $dir $t)){throw 'Narration media hash mismatch or take unavailable.'}
     $file=Resolve-LFNarrationAsset $dir $t.asset.path
     Send-Audio $stream $file $headers['range']
@@ -196,5 +213,5 @@ try{
  $listener.Stop();[IO.File]::WriteAllText((Join-Path $root "$Instance.stop"),'stop')
  for($i=0;$i -lt 20;$i++){if(-not (Get-Process -Id $WorkerPid -ErrorAction SilentlyContinue)){break};Start-Sleep -Milliseconds 250}
  $current=Read-LFSharedJson (Join-Path $root 'runtime.json')
- if($current.instance -eq $Instance){Write-LFJson (Join-Path $root 'runtime.json') @{instance=$Instance;server_pid=$PID;worker_pid=$WorkerPid;port=$Port;url="http://127.0.0.1:$Port/";status='stopped';milestone='E'}}
+ if($current.instance -eq $Instance){Write-LFJson (Join-Path $root 'runtime.json') @{instance=$Instance;server_pid=$PID;worker_pid=$WorkerPid;port=$Port;url="http://127.0.0.1:$Port/";status='stopped';milestone='E';api_version=2}}
 }

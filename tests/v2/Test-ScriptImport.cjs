@@ -9,6 +9,7 @@ const fixture = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
 const repo = path.resolve(__dirname, '../..');
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 class Element {
+ reportValidity(){return true;} pause(){} removeAttribute(key){delete this[key];} getAttribute(key){return this[key];}
   constructor() { this.children=[]; this.dataset={}; this.value=''; this.textContent=''; this.classList={toggle(){}}; }
   append(...children) { this.children.push(...children); }
   replaceChildren(...children) { this.children=children; }

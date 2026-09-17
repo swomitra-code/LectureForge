@@ -1,5 +1,5 @@
 'use strict';
-let assemblyReady=null,assemblyProject=null,assemblyBusy=false,assemblyState=null,choiceTimer=null;
+let assemblyReady=null,assemblyProject=null,assemblyBusy=false,assemblySubmitting=false,assemblyState=null,choiceTimer=null;
 function placementForm(){if(!assemblyReady)return;const n=Number($('placement-slide').value);const p=assemblyReady.placement.overrides.find(x=>x.slide===n)?.placement||assemblyReady.default_placement;for(const k of ['left','top','width'])$('placement-'+k).value=(p[k]*100).toFixed(4);}
 async function checkAssembly(refreshPlacement=true){
  if(!project||stopped)return;
@@ -35,11 +35,25 @@ async function loadAssembly(){
   if(changedProject)$('output-folder').value=c?.folder||'';
  }catch(e){message(e.message,true);}finally{assemblyBusy=false;}
 }
-async function createRecording(){await save();await checkAssembly();if(!assemblyReady.ready)return;await request('/api/assembly-create?id='+project.id,{expected:assemblyReady.binding,folder:$('output-folder').value});await loadAssembly();}
+async function createRecording(){
+ if(assemblySubmitting)return;
+ let submitted=false;
+ assemblySubmitting=true;$('create-recording').disabled=true;$('retry-assembly').disabled=true;
+ $('assembly-progress').textContent='Validating readiness...';message('Validating Recording PowerPoint inputs.');
+ try{
+  const inputsChanged=dirty||assemblyProject!==project.id||!assemblyReady;await save();if(inputsChanged)await checkAssembly();
+  if(!assemblyReady.ready)throw Error(assemblyReady.errors.join('; ')||'Recording PowerPoint inputs are not ready.');
+  $('assembly-progress').textContent='Readiness passed. Submitting assembly request...';
+  const accepted=await request('/api/assembly-create?id='+project.id,{expected:assemblyReady.binding,folder:$('output-folder').value});
+  submitted=true;
+  assemblyState=accepted;$('assembly-progress').textContent=accepted.current?.stage||'Assembly request accepted';
+  message('Assembly request accepted. Progress will update here.');await loadAssembly();
+ }catch(e){$('assembly-progress').textContent='Assembly request failed - '+e.message;throw e;}
+ finally{assemblySubmitting=false;$('retry-assembly').disabled=false;if(submitted)await loadAssembly();else $('create-recording').disabled=dirty||!assemblyReady?.ready;}
+}
 $('check-assembly').onclick=()=>action(checkAssembly);$('create-recording').onclick=$('retry-assembly').onclick=()=>action(createRecording);$('placement-slide').onchange=placementForm;
 async function savePlacement(reset){if(!assemblyReady)await checkAssembly();const width=Number($('placement-width').value)/100;const p=reset?null:{left:Number($('placement-left').value)/100,top:Number($('placement-top').value)/100,width,height:width*project.source.width_emu/project.source.height_emu*560/640};await request('/api/assembly-placement?id='+project.id,{slide:Number($('placement-slide').value),placement:p,version:assemblyReady.placement.version});await checkAssembly();message('Placement saved. Narration and avatar media are unchanged.');}
 $('placement-save').onclick=()=>action(()=>savePlacement(false));$('placement-reset').onclick=()=>action(()=>savePlacement(true));
 $('open-recording').onclick=()=>action(()=>request('/api/recording-open?id='+project.id,{kind:'deck'}));$('open-output').onclick=()=>action(()=>request('/api/recording-open?id='+project.id,{kind:'folder'}));
 $('choose-output').onclick=()=>action(async()=>{const id=project.id;await request('/api/output-choose?id='+id,{});clearInterval(choiceTimer);let count=0;choiceTimer=setInterval(async()=>{try{const d=await request('/api/output-choice?id='+id);if(++count>120||['selected','cancelled'].includes(d.state)){clearInterval(choiceTimer);if(project?.id===id&&d.state==='selected')$('output-folder').value=d.path;}}catch{clearInterval(choiceTimer);}},1000);});
 setInterval(loadAssembly,2000);
-setInterval(()=>{if(project&&!stopped&&!dirty)action(()=>checkAssembly(false));},15000);

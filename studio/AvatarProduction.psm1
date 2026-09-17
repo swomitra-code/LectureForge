@@ -19,7 +19,44 @@ function Assert-LFAvatarJobBinding($Snapshot,$Job){
 }
 function Assert-LFAvatarInputs($Root,$Id,$Dir,$Authorization){
  $a=Read-LFApproval $Dir $Authorization 'authorization';$supported=Get-LFAvatarPreset ([pscustomobject]@{preset=Get-LFPreset});if((ConvertTo-LFCanonicalJson $supported) -ne (ConvertTo-LFCanonicalJson $a.snapshot.avatar_preset)){throw 'Unsupported avatar preset. Use the proven Renewable Energy preset.'};$c=Get-LFSelectionInputs $Root $Id $Dir
- if(-not $c.snapshot.can_authorize -or $c.binding_sha256 -ne $a.binding_sha256){throw 'Authorization stale. Return to Review Selections.'};$a
+ $selectionBinding=if($a.snapshot.PSObject.Properties.Name -contains 'selection_binding'){$a.snapshot.selection_binding}else{$a.binding_sha256}
+ if(-not $c.snapshot.can_authorize -or $c.binding_sha256 -ne $selectionBinding){throw 'Authorization stale. Return to Review Selections.'};$a
+}
+function Assert-LFAvatarArtifactAuthorization($Dir,$Job){
+ $a=Read-LFApproval $Dir $Job.authorization 'authorization'
+ Assert-LFAvatarJobBinding $a.snapshot $Job
+ $receiptPath=Get-LFApprovalPath $Dir $Job.authorization 'consumed'
+ if(-not (Test-Path $receiptPath)){throw 'Avatar job authorization was not consumed by the production worker.'}
+ $receipt=Get-Content -Raw -Encoding UTF8 $receiptPath|ConvertFrom-Json
+ $authorizationHash=(Get-FileHash (Get-LFApprovalPath $Dir $Job.authorization 'authorization')).Hash
+ if($receipt.consumer -ne 'lectureforge-avatar-worker-1' -or $receipt.authorization -ne $Job.authorization -or $receipt.authorization_sha256 -ne $authorizationHash){throw 'Avatar job authorization receipt is invalid.'}
+ $a
+}
+function Get-LFAvatarReplacementSummary($Root,$Id,$Job){
+ Invoke-LFNarrationLock $Root $Id {param($dir)
+  $j=Read-LFAvatarJob $dir $Job;if($j.stage -ne 'Exception' -or $j.provider_status -ne 'failed'){throw 'Only a failed HeyGen generation may be re-authorized.'}
+  $current=Get-LFSelectionInputs $Root $Id $dir;$row=@($current.snapshot.slides|Where-Object number -eq $j.slide)[0]
+  if(-not $row -or $row.selected_take -ne $j.take -or $row.narration.sha256 -ne $j.row.narration.sha256){throw 'Failed job no longer matches the selected narration.'}
+  [ordered]@{job=$j.id;slide=$row.number;title=$row.title;selected_take=$row.selected_take;avatar_preset=$current.snapshot.avatar_preset;expected_new_provider_jobs=1;reusable_avatars=0;paid_replacement=$true;selection_binding=$current.binding_sha256;placement=$j.placement}
+ }
+}
+function Confirm-LFAvatarReplacement($Root,$Id,$Job,[bool]$Confirm,[string]$Expected){
+ if(-not $Confirm){throw 'Explicit paid replacement confirmation is required.'}
+ Invoke-LFNarrationLock $Root $Id {param($dir)
+  $j=Read-LFAvatarJob $dir $Job;if($j.stage -ne 'Exception' -or $j.provider_status -ne 'failed'){throw 'Only a failed HeyGen generation may be re-authorized.'}
+  $current=Get-LFSelectionInputs $Root $Id $dir;$row=@($current.snapshot.slides|Where-Object number -eq $j.slide)[0]
+  if($Expected -ne $current.binding_sha256 -or -not $row -or $row.selected_take -ne $j.take -or $row.narration.sha256 -ne $j.row.narration.sha256){throw 'Replacement summary is stale. Review it again.'}
+  $q=Read-LFAvatarQueue $dir;$sequence=@($q.batches|Where-Object replacement_of -eq $j.id).Count+1
+  $snapshot=[ordered]@{selection_binding=$current.binding_sha256;replacement_of=$j.id;replacement_sequence=$sequence;project_revision=$current.snapshot.project_revision;intent_revision=$current.snapshot.intent_revision;avatar_preset=$current.snapshot.avatar_preset;avatar_preset_sha256=$current.snapshot.avatar_preset_sha256;default_placement=$current.snapshot.default_placement;slides=@($row);expected_new_provider_jobs=1;reusable_avatars=0;paid_replacement=$true}
+  $aid=Get-LFTextHash (ConvertTo-LFCanonicalJson $snapshot);[void][IO.Directory]::CreateDirectory((Join-Path $dir 'approvals'));$authPath=Get-LFApprovalPath $dir $aid authorization
+  if(Test-Path (Get-LFApprovalPath $dir $aid consumed)){throw 'Replacement authorization already consumed. Review and authorize a new retry.'}
+  if(-not (Test-Path $authPath)){Write-LFImmutableJson $authPath @{schema='lectureforge-avatar-replacement-authorization-1';id=$aid;timestamp=[DateTime]::UtcNow.ToString('o');project_id=$Id;binding_sha256=$aid;snapshot=$snapshot;authorization='one paid replacement avatar generation';provider_jobs_submitted=0;consumer_milestone='D'}}
+  Write-LFImmutableJson (Get-LFApprovalPath $dir $aid consumed) @{consumer='lectureforge-avatar-worker-1';authorization=$aid;authorization_sha256=(Get-FileHash $authPath).Hash;timestamp=[DateTime]::UtcNow.ToString('o')}
+  $jid=(Get-LFTextHash ($aid+'/'+$row.number)).Substring(0,16).ToLowerInvariant();$path=Get-LFAvatarJobPath $dir $jid;[void][IO.Directory]::CreateDirectory((Split-Path $path))
+  $replacement=[ordered]@{id=$jid;authorization=$aid;slide=$row.number;take=$row.selected_take;row=$row;preset=$snapshot.avatar_preset;placement=$j.placement;stage='Queued';history=@('Authorized','Queued');error=$null;exception_kind=$null;lease=$null;submission_intent=$false;video_id=$null;audio_asset_id=$null;provider_status=$null;provider_terminal=$false;provider_calls=0;next_poll_utc=$null;download_url=$null;raw_path=$null;raw_sha256=$null;output_path=$null;output_sha256=$null;validation=$null;attempt=0;updated_utc=[DateTime]::UtcNow.ToString('o')}
+  Write-LFJson $path $replacement;$q.jobs=@($q.jobs+$jid|Select-Object -Unique);$q.batches+=@{authorization=$aid;jobs=@($jid);replacement_of=$j.id};Write-LFJson (Join-Path $dir 'avatar-queue.json') $q
+  @{authorization=$aid;job=$jid;stage='Queued'}
+ }
 }
 function Start-LFAvatarBatch($Root,$Id){
  Invoke-LFNarrationLock $Root $Id {param($dir)
@@ -62,7 +99,7 @@ function Get-LFAvatarStatus($Root,$Id){
  # Read-only, no provider requests, no media hashing on frequent dashboard reads.
  Invoke-LFNarrationLock $Root $Id {param($dir)
   $q=Read-LFAvatarQueue $dir;$jobs=@(foreach($jid in $q.jobs){Read-LFAvatarJob $dir $jid})
-  $latest=$q.batches|Select-Object -Last 1;$active=@($jobs|Where-Object {$latest -and $_.id -in $latest.jobs})
+  $latest=$q.batches|Select-Object -Last 1;$active=@($jobs|Group-Object slide|ForEach-Object {$_.Group|Select-Object -Last 1}|Sort-Object slide)
   $stale=$false;if($latest){$a=Read-LFApproval $dir $latest.authorization 'authorization';$p=Get-Content -Raw (Join-Path $dir 'project.json')|ConvertFrom-Json;$n=Read-LFNarrationFile $dir;$intent=if($n.PSObject.Properties.Name -contains 'intent_revision'){$n.intent_revision}else{0};$stale=($p.version -ne $a.snapshot.project_revision -or $intent -ne $a.snapshot.intent_revision)}
   @{stale=$stale;paused=$q.paused;authorization=if($latest){$latest.authorization}else{$null};jobs=$active;historical_jobs=@($jobs|Where-Object {$_.id -notin $active.id});authorized=$active.Count;ready=@($active|Where-Object stage -eq 'Avatar Ready').Count;exceptions=@($active|Where-Object stage -eq 'Exception').Count;queued=@($active|Where-Object stage -eq 'Queued').Count;provider_processing=@($active|Where-Object {$_.submission_intent -and -not $_.provider_terminal}).Count;provider_calls=($jobs|Measure-Object provider_calls -Sum).Sum}
  }

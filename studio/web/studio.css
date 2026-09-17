@@ -3,3 +3,5 @@
 #narration{margin:2rem 0}#slide-progress{display:flex;flex-wrap:wrap;gap:.5rem}#review-panel{margin-top:1.5rem}#thumbnail{max-width:100%;height:auto;border:1px solid #ddd}#review-script, #takes pre{white-space:pre-wrap;font:inherit;line-height:1.6}#takes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}#takes article{padding:1rem;border:1px solid #ccd4dc;border-radius:8px}audio{width:100%;margin-bottom:1rem}details{margin-top:1.5rem}@media(max-width:800px){#takes{grid-template-columns:1fr}}
 
 #selection-summary{margin:2rem 0}.table-scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;background:white}th,td{text-align:left;padding:.75rem;border-bottom:1px solid #ccd4dc;vertical-align:top}th{background:#e7eff3}#summary-warning{color:#a51d2d}#authorization-status{font-weight:700}#authorization-confirmation{border:2px solid #086c76;padding:1.25rem;margin-top:1.5rem}
+
+.narration-settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px 18px}#narration-settings{margin-top:12px}#narration-settings p{font-size:.9rem}#test-audio{max-width:100%}

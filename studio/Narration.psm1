@@ -1,5 +1,6 @@
 $ErrorActionPreference='Stop'
 Import-Module (Join-Path $PSScriptRoot 'Production.psm1')
+Import-Module (Join-Path $PSScriptRoot 'NarrationSettings.psm1')
 function Get-LFTextHash([string]$Text){
  $h=[Security.Cryptography.SHA256]::Create();try{([BitConverter]::ToString($h.ComputeHash([Text.Encoding]::UTF8.GetBytes($Text)))).Replace('-','')}finally{$h.Dispose()}
 }
@@ -27,7 +28,7 @@ function Read-LFNarrationFile([string]$Dir){
   })
   $valid=@();$legacy=@()
   foreach($t in $items){
-   if($null -ne $t -and $t -is [pscustomobject] -and $t.number -in 1,2,3 -and $t.state -is [string]){$valid+= $t}
+   if($null -ne $t -and $t -is [pscustomobject] -and $t.number -in 1,2,3,4,5 -and $t.state -is [string]){$valid+= $t}
    elseif($null -ne $t){$legacy+= $t}
   }
   # Preserve unrecognized data for recovery, including on later narration writes.
@@ -40,7 +41,7 @@ function Read-LFNarrationFile([string]$Dir){
 }
 function Get-LFCurrentRevision($State,$Project,$Slide){
  $binding=Get-LFBinding $Project $Slide
- @($State.revisions|Where-Object {$_.slide_number -eq $Slide.number -and $_.binding -eq $binding})|Select-Object -Last 1
+ @($State.revisions|Where-Object {$_.preview -ne $true -and $_.slide_number -eq $Slide.number -and $_.binding -eq $binding})|Select-Object -Last 1
 }
 function Resolve-LFNarrationAsset([string]$Dir,[string]$Relative){
  if($Relative -notmatch '^n/[a-f0-9]{12}/[a-f0-9]{12}/(raw\.mp3|take\.(mp3|wav))$'){throw 'Invalid narration asset path.'}
@@ -61,7 +62,7 @@ function Get-LFNarration([string]$Root,[string]$Id){
    # unwraps zero/one items (Windows PowerShell serializes the empty result as {}).
    [pscustomobject]@{number=$s.number;enabled=$s.enabled;revision=if($r){$r.id}else{$null};selected_take=if($r){$r.selected_take}else{$null};takes=@(if($r){$r.takes});binding=Get-LFBinding $p $s}
   })
-  @{slides=$slides;project_version=$p.version;provider_calls=@($state.revisions.takes.attempts|Where-Object {$_.submitted_utc}).Count;heygen_calls=0}
+  @{previews=@($state.revisions|Where-Object preview -eq $true);slides=$slides;project_version=$p.version;provider_calls=@($state.revisions.takes.attempts|Where-Object {$_.submitted_utc}).Count;heygen_calls=0}
  }
 }
 function Get-LFNarrationPlan([string]$Root,[string]$Id){
@@ -70,7 +71,7 @@ function Get-LFNarrationPlan([string]$Root,[string]$Id){
   foreach($s in $p.slides|Where-Object enabled){
    if([string]::IsNullOrWhiteSpace($s.script)){throw "Slide $($s.number) needs a saved script."}
    $r=Get-LFCurrentRevision $state $p $s
-   if(-not $r){$count+=3;$slides++}else{
+   if(-not $r){$count+=(Resolve-LFNarrationSettings $p.preset.narration).takes_per_slide;$slides++}else{
     foreach($t in $r.takes|Where-Object state -eq 'ready'){if(-not (Test-LFTake $dir $t)){throw "Slide $($s.number) Take $($t.number) asset missing or changed. No regeneration authorized."}}
    }
   }
@@ -89,16 +90,33 @@ function Add-LFNarrationBatch([string]$Root,[string]$Id,[int]$Version){
   foreach($s in $p.slides|Where-Object enabled){
    if(Get-LFCurrentRevision $state $p $s){continue}
    $r=[pscustomobject]@{id=[guid]::NewGuid().ToString('N').Substring(0,12);slide_id="$Id/$($s.number)";slide_number=$s.number;script=$s.script;script_sha256=Get-LFTextHash $s.script;script_revision=$p.version;binding=Get-LFBinding $p $s;pause_seconds=$s.post_speech_silence_seconds;settings=$p.preset.narration;created_utc=[DateTime]::UtcNow.ToString('o');selected_take=$null;takes=@()}
-   foreach($n in 1..3){$t=[pscustomobject]@{number=$n;state='queued';asset=$null;attempts=@()};$t.attempts=@(New-LFAttempt $r $t);$r.takes+= $t}
+   foreach($n in 1..(Resolve-LFNarrationSettings $p.preset.narration).takes_per_slide){$t=[pscustomobject]@{number=$n;state='queued';asset=$null;attempts=@()};$t.attempts=@(New-LFAttempt $r $t);$r.takes+= $t}
    $state.revisions+= $r
   }
   Write-LFJson (Join-Path $dir 'narration.json') $state
  }
 }
+function Add-LFNarrationPreview([string]$Root,[string]$Id,[int]$Slide,[int]$Version,$Settings,[string]$Text){
+ Invoke-LFNarrationLock $Root $Id {param($dir)
+  $p=Read-LFProject $Root $Id
+  if($p.version -ne $Version){throw 'Project changed. Reload before generating a test take.'}
+  $s=@($p.slides|Where-Object number -eq $Slide)|Select-Object -First 1
+  if(-not $s -or -not $s.enabled){throw 'Select an enabled slide for the test take.'}
+  if([string]::IsNullOrWhiteSpace($Text)){throw 'Current slide needs narration text.'}
+  if($null -eq $Settings){throw 'Test take settings are required.'}
+  $settingsSnapshot=Resolve-LFNarrationSettings $Settings
+  $state=Read-LFNarrationFile $dir
+  if(@($state.revisions|Where-Object {$_.preview -eq $true -and $_.slide_number -eq $Slide -and $_.takes[0].state -in 'queued','dispatched','generating'}).Count){throw 'A test take for this slide is already in progress.'}
+  $r=[pscustomobject]@{id=[guid]::NewGuid().ToString('N').Substring(0,12);preview=$true;slide_id="$Id/$Slide";slide_number=$Slide;script=$Text;script_sha256=Get-LFTextHash $Text;script_revision=$Version;binding=$null;pause_seconds=0;settings=$settingsSnapshot;created_utc=[DateTime]::UtcNow.ToString('o');selected_take=$null;takes=@()}
+  $t=[pscustomobject]@{number=1;state='queued';asset=$null;attempts=@()};$t.attempts=@(New-LFAttempt $r $t);$r.takes=@($t)
+  $state.revisions+=$r;Write-LFJson (Join-Path $dir 'narration.json') $state
+  $r.id
+ }
+}
 function Set-LFNarrationSelection([string]$Root,[string]$Id,[int]$Slide,[string]$Revision,[int]$Take){
  Invoke-LFNarrationLock $Root $Id {param($dir)
   $p=Read-LFProject $Root $Id;$state=Read-LFNarrationFile $dir;$s=@($p.slides|Where-Object number -eq $Slide)[0];$r=Get-LFCurrentRevision $state $p $s
-  if(-not $r -or $r.id -ne $Revision -or $Take -notin 0,1,2,3){throw 'Narration revision changed. Reload this slide.'}
+  if(-not $r -or $r.id -ne $Revision -or $Take -notin 0,1,2,3,4,5){throw 'Narration revision changed. Reload this slide.'}
   if($Take -ne 0 -and -not (Test-LFTake $dir (@($r.takes|Where-Object number -eq $Take)|Select-Object -First 1))){throw 'Take is not verified and ready.'}
   $selected=if($Take){$Take}else{$null}
   if($r.selected_take -ne $selected){
@@ -108,10 +126,38 @@ function Set-LFNarrationSelection([string]$Root,[string]$Id,[int]$Slide,[string]
   $r.selected_take=$selected;Write-LFJson (Join-Path $dir 'narration.json') $state
  }
 }
+function Add-LFNarrationRegeneration([string]$Root,[string]$Id,[string]$Revision,[int]$Take,[string]$ExpectedAttempt){
+ Invoke-LFNarrationLock $Root $Id {param($dir)
+  $state=Read-LFNarrationFile $dir;$p=Read-LFProject $Root $Id
+  $r=@($state.revisions|Where-Object id -eq $Revision)|Select-Object -First 1
+  if(-not $r -or $Take -notin 1,2,3,4,5){throw 'Unknown take.'}
+  $s=@($p.slides|Where-Object number -eq $r.slide_number)|Select-Object -First 1
+  if(-not $s.enabled -or (Get-LFCurrentRevision $state $p $s).id -ne $Revision){throw 'Saved narration changed or slide disabled. Reload this slide.'}
+  $t=@($r.takes|Where-Object number -eq $Take)|Select-Object -First 1
+  if(-not $ExpectedAttempt -or $t.attempts[-1].id -ne $ExpectedAttempt){throw 'Take changed. Reload this slide.'}
+  if(-not (Test-LFTake $dir $t) -or $t.attempts[-1].state -eq 'uncertain'){throw 'Take must be ready; uncertain requests require investigation.'}
+  $a=New-LFAttempt $r $t
+  $a|Add-Member -NotePropertyName previous_asset -NotePropertyValue $t.asset
+  $t.attempts+= $a;$t.state='queued'
+  Write-LFJson (Join-Path $dir 'narration.json') $state
+ }
+}
+function Restore-LFNarrationTake([string]$Root,[string]$Id,[string]$Revision,[int]$Take){
+ Invoke-LFNarrationLock $Root $Id {param($dir)
+  $state=Read-LFNarrationFile $dir
+  $r=@($state.revisions|Where-Object id -eq $Revision)|Select-Object -First 1
+  $t=@($r.takes|Where-Object number -eq $Take)|Select-Object -First 1
+  if(-not $t -or $t.state -notin @('failed','uncertain','local exception') -or -not $t.asset){throw 'No previous take available for recovery.'}
+  $candidate=[pscustomobject]@{state='ready';asset=$t.asset}
+  if(-not (Test-LFTake $dir $candidate)){throw 'Previous audio is missing or changed.'}
+  $t.state='ready'
+  Write-LFJson (Join-Path $dir 'narration.json') $state
+ }
+}
 function Retry-LFNarration([string]$Root,[string]$Id,[string]$Revision,[int]$Take){
  Invoke-LFNarrationLock $Root $Id {param($dir)
   $state=Read-LFNarrationFile $dir;$p=Read-LFProject $Root $Id;$r=@($state.revisions|Where-Object id -eq $Revision)[0]
-  if(-not $r -or $Take -notin 1,2,3){throw 'Unknown take.'}
+  if(-not $r -or $Take -notin 1,2,3,4,5){throw 'Unknown take.'}
   $s=@($p.slides|Where-Object number -eq $r.slide_number)[0]
   if((Get-LFCurrentRevision $state $p $s).id -ne $Revision){throw 'Cannot retry an obsolete narration revision.'}
   $t=@($r.takes|Where-Object number -eq $Take)|Select-Object -First 1
@@ -157,8 +203,9 @@ function Get-LFNextNarration([string]$Root){
    }}
    if($changed){Write-LFJson (Join-Path $dir 'narration.json') $state}
    if($active){return @{busy=$true}}
-   foreach($s in $p.slides|Where-Object enabled){
-    $r=Get-LFCurrentRevision $state $p $s;if(-not $r){continue}
+   $candidates=@($state.revisions|Where-Object preview -eq $true)+@(foreach($s in $p.slides|Where-Object enabled){Get-LFCurrentRevision $state $p $s})
+   foreach($r in $candidates){
+    if(-not $r){continue}
     foreach($t in $r.takes|Where-Object state -eq 'queued'){
      $a=$t.attempts[-1];$t.state='dispatched';$a.state='dispatched';$a.owner_pid=$PID;$a.owner_start=(Get-Process -Id $PID).StartTime.ToUniversalTime().ToString('o')
      Write-LFJson (Join-Path $dir 'narration.json') $state

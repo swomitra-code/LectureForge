@@ -19,7 +19,7 @@ try{
   if(Test-Path $runtime){
    $old=Read-LFSharedJson $runtime
    if($old.status -eq 'running'){
-    try{$health=Invoke-RestMethod -UseBasicParsing -Uri ($old.url+'api/health') -TimeoutSec 2;$running=($health.instance -eq $old.instance -and $health.ready -and $health.milestone -eq 'E')}catch{}
+    try{$health=Invoke-RestMethod -UseBasicParsing -Uri ($old.url+'api/health') -TimeoutSec 2;$running=($health.instance -eq $old.instance -and $health.ready -and $health.milestone -eq 'E' -and $health.api_version -eq 2)}catch{}
     if($running){$url=$old.url}else{
      # Signal only the old instance; never terminate unrelated/user-owned processes.
      [IO.File]::WriteAllText((Join-Path $root ($old.instance+'.stop')),'stop')
@@ -37,7 +37,7 @@ try{
    $url="http://127.0.0.1:$Port/";$ready=$false
    for($i=0;$i -lt 40;$i++){
     Start-Sleep -Milliseconds 250
-    try{$health=Invoke-RestMethod -UseBasicParsing -Uri ($url+'api/health') -TimeoutSec 1;if($health.instance -eq $instance -and $health.ready){$ready=$true;break}}catch{}
+    try{$health=Invoke-RestMethod -UseBasicParsing -Uri ($url+'api/health') -TimeoutSec 1;if($health.instance -eq $instance -and $health.ready -and $health.api_version -eq 2){$ready=$true;break}}catch{}
     if($server.HasExited){break}
    }
    if(-not $ready){[IO.File]::WriteAllText((Join-Path $root "$instance.stop"),'stop');throw 'LectureForge could not start. Check the runtime folder and port availability.'}

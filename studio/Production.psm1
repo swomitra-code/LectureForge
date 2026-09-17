@@ -1,6 +1,7 @@
 ﻿Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
 Import-Module (Join-Path $PSScriptRoot 'Project.psm1')
+Import-Module (Join-Path $PSScriptRoot 'NarrationSettings.psm1')
 function Get-LFRoot([string]$Root) {
  if(-not $Root){$Root=Join-Path $env:LOCALAPPDATA 'LectureForge'}
  $p=[IO.Path]::GetFullPath($Root).TrimEnd('\')
@@ -29,6 +30,13 @@ function Read-LFProject([string]$Root,[string]$Id){
  $p=Get-Content -Encoding UTF8 -LiteralPath (Join-Path $dir 'project.json') -Raw | ConvertFrom-Json
  if($p.schema -ne 'lectureforge-studio-1' -or $p.id -ne $Id){throw 'Unsupported project state.'}
  if((Get-V2Asset (Join-Path $dir 'source.pptx')).sha256 -ne $p.source.sha256){throw 'Project source hash mismatch. Original source remains untouched.'}
+ if($p.preset.PSObject.Properties.Name -notcontains 'narration'){
+  $p.preset|Add-Member -NotePropertyName narration -NotePropertyValue (Get-LFNarrationDefaults)
+ }elseif($null -eq $p.preset.narration){$p.preset.narration=Get-LFNarrationDefaults}
+ $resolved=Resolve-LFNarrationSettings $p.preset.narration
+ foreach($key in $resolved.PSObject.Properties.Name){
+  if($p.preset.narration.PSObject.Properties.Name -notcontains $key){$p.preset.narration|Add-Member -NotePropertyName $key -NotePropertyValue $resolved.$key}
+ }
  $p
 }
 function Get-LFPreset([string]$Id='renewable-energy'){
@@ -78,6 +86,10 @@ function ConvertFrom-LFScripts([string]$Text,[int]$SlideCount){
 function Update-LFProject([string]$Root,[string]$Id,$Update){
  $p=Read-LFProject $Root $Id
  if([int]$Update.version -ne $p.version){throw 'Project changed in another window. Reload before saving.'}
+ if($Update.PSObject.Properties.Name -contains 'narration_settings'){
+  if($null -eq $Update.narration_settings){throw 'Narration settings must be an object.'}
+  $p.preset.narration=Resolve-LFNarrationSettings $Update.narration_settings
+ }
  if($Update.PSObject.Properties.Name -contains 'script_import'){
   $scripts=ConvertFrom-LFScripts $Update.script_import $p.source.slide_count
   foreach($s in $p.slides){if($scripts.ContainsKey([string]$s.number)){$s.script=$scripts[[string]$s.number]}}

@@ -1,3 +1,4 @@
+Import-Module (Join-Path $PSScriptRoot 'NarrationSettings.psm1')
 function Protect-NarrationDiagnostic([string]$Value, [string[]]$SensitiveValues) {
     foreach ($sensitive in $SensitiveValues) {
         if ([string]::IsNullOrEmpty($sensitive)) { continue }
@@ -68,6 +69,7 @@ function ConvertTo-LFSpokenText([string]$Text) {
 }
 
 function Invoke-LFElevenLabs($Settings,[string]$Text,[string]$Output) {
+    $Settings=Resolve-LFNarrationSettings $Settings
     if (-not $env:ELEVENLABS_API_KEY) { throw 'ELEVENLABS_API_KEY is not set.' }
     if (Test-Path -LiteralPath $Output) { throw 'Provider output already exists.' }
     $spokenText=ConvertTo-LFSpokenText $Text

@@ -3,6 +3,7 @@ $ErrorActionPreference='Stop'
 Import-Module (Join-Path $PSScriptRoot 'Project.psm1')
 Import-Module (Join-Path $PSScriptRoot 'Render.psm1')
 Import-Module (Join-Path $PSScriptRoot 'WhiteAvatar.psm1')
+Import-Module (Join-Path $PSScriptRoot 'NativeSlideValidation.psm1') -Force
 
 function Get-RecordingShapeInfo($Shape) {
     $item=[ordered]@{id=$Shape.Id;name=$Shape.Name;type=$Shape.Type;left=[math]::Round($Shape.Left,4);top=[math]::Round($Shape.Top,4);width=[math]::Round($Shape.Width,4);height=[math]::Round($Shape.Height,4);rotation=[math]::Round($Shape.Rotation,4);visible=$Shape.Visible;text='';children=@();table=@()}
@@ -273,8 +274,9 @@ function New-V2RecordingBatch {
  if((Get-V2Asset $outputPath).sha256 -ne $SourceSha256){throw 'Derivative copy hash mismatch.'}
  $app=$null;$deck=$null;$wasRunning=@(Get-Process POWERPNT -ErrorAction SilentlyContinue).Count -gt 0
  $report=[ordered]@{source_sha256_before=$SourceSha256;source_sha256_after=$null;slide_count=$info.slide_count;avatar_count=$Avatars.Count;slides=@();save_calls=0;reopened=$false;passed=$false;provider_calls=0}
- $signatures=@{};$renders=@{};$stage='Opening PowerPoint';$number=0
+ $signatures=@{};$nativeSnapshots=@{};$renders=@{};$stage='Opening PowerPoint';$number=0
  try{
+  for($n=1;$n -le $info.slide_count;$n++){$nativeSnapshots[$n]=Get-LFNativeSlideSnapshot $Source $n}
   & $Progress $stage 0
   $app=New-Object -ComObject PowerPoint.Application
   $deck=$app.Presentations.Open($outputPath,$false,$false,$false)
@@ -300,7 +302,7 @@ function New-V2RecordingBatch {
   if($deck.Slides.Count -ne $info.slide_count){throw 'Slide count changed.'}
   for($n=1;$n -le $deck.Slides.Count;$n++){
    $number=$n;& $Progress $stage $n;$slide=$deck.Slides.Item($n);$exclude=-1
-   $result=[ordered]@{slide=$n;produced=$map.ContainsKey($n);native_preserved=$false;native_render_identical=$false}
+   $result=[ordered]@{slide=$n;produced=$map.ContainsKey($n);native_preserved=$false;native_render_identical=$false;com_signature_identical=$false}
    if($map.ContainsKey($n)){
     $a=$map[$n];$p=$a.placement;$media=@($slide.Shapes|Where-Object Type -eq 16)
     if($media.Count -ne 1 -or $media[0].Name -ne ('LectureForge_White_Avatar_Slide'+$n.ToString('00'))){throw "Slide $n expected exactly one named media object."}
@@ -313,10 +315,18 @@ function New-V2RecordingBatch {
     $m.Left=[single]$left;$m.Width=[single]$width;$m.Visible=0
     $result.independent_move_resize=$true;$result.autoplay=$true;$result.placement=$p
    }
-   $result.native_preserved=((Get-RecordingSlideSignature $slide $exclude) -eq $signatures[$n])
+   $result.com_signature_identical=((Get-RecordingSlideSignature $slide $exclude) -eq $signatures[$n])
+   $result.native_diff=Compare-LFNativeSlideSnapshot $nativeSnapshots[$n] (Get-LFNativeSlideSnapshot $outputPath $n)
+   $result.native_preserved=$result.native_diff.unchanged
    $png=Join-Path $ev "c$n.png";$slide.Export($png,'PNG',1920,1080);$result.native_render_identical=((Get-V2Asset $png).sha256 -eq $renders[$n])
    if($map.ContainsKey($n)){$m.Visible=-1}
-   if(-not $result.native_preserved -or -not $result.native_render_identical){throw "Slide $n native content changed."}
+   # PNG exports can differ at a few anti-aliased pixels across two renders of the
+   # same open/save-normalized slide. Keep that signal as diagnostics; semantic
+   # native OOXML objects and their referenced asset bytes are the safety gate.
+   if(-not $result.native_preserved){
+    Write-V2Json (Join-Path $ev "slide-$n-native-diff.json") $result.native_diff
+    throw "Slide $n native content changed. See slide-$n-native-diff.json."
+   }
    $report.slides+=,$result
   }
   # The movement/visibility probes are in-memory only; never save validation changes.

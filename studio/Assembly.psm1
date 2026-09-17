@@ -1,6 +1,10 @@
 ﻿$ErrorActionPreference='Stop'
 Import-Module (Join-Path $PSScriptRoot 'AvatarProduction.psm1')
 function Read-LFAssembly($Dir){$file=Join-Path $Dir 'assembly.json';if(Test-Path $file){Read-LFSharedJson $file}else{[pscustomobject]@{schema='lectureforge-assembly-1';current=$null;last_success=$null;history=@()}}}
+function Add-LFAssemblyEvent($Attempt,[string]$Stage,[int]$Slide=0,[string]$Message=''){
+ if(-not ($Attempt.PSObject.Properties.Name -contains 'events')){$Attempt|Add-Member -NotePropertyName events -NotePropertyValue @()}
+ $Attempt.events+=@{utc=[DateTime]::UtcNow.ToString('o');stage=$Stage;slide=$Slide;message=$Message}
+}
 function Read-LFPlacement($Dir){$file=Join-Path $Dir 'placement.json';if(Test-Path $file){Read-LFSharedJson $file}else{[pscustomobject]@{version=0;overrides=@()}}}
 function Assert-LFPlacement($Placement,$Project){
  foreach($key in 'left','top','width','height'){if($null -eq $Placement.$key){throw "Missing placement $key"};$v=[double]$Placement.$key;if([double]::IsNaN($v) -or [double]::IsInfinity($v)){throw 'Placement must be finite.'}}
@@ -21,22 +25,22 @@ function Set-LFAssemblyPlacement($Root,$Id,[int]$Slide,$Placement,[int]$Expected
 }
 function Get-LFAssemblyInputs($Root,$Id,$Dir){
  $p=Read-LFProject $Root $Id;$selection=Get-LFSelectionInputs $Root $Id $Dir;$queue=Read-LFAvatarQueue $Dir;$placement=Read-LFPlacement $Dir
- $errors=@();$rows=@();$batch=$queue.batches|Select-Object -Last 1;$auth=$null
- if($batch){try{$auth=Assert-LFAvatarInputs $Root $Id $Dir $batch.authorization}catch{$errors+='Production authorization is stale. Review selections again.'}}else{$errors+='No confirmed production batch.'}
+ $errors=@();$rows=@();$batch=$queue.batches|Select-Object -Last 1
+ if(-not $batch){$errors+='No confirmed production batch.'}
  foreach($s in $selection.snapshot.slides){
   try{
    if($s.status -ne 'narration selected'){throw $s.status}
-   $matches=@(foreach($jid in $batch.jobs){$j=Read-LFAvatarJob $Dir $jid;if($j.slide -eq $s.number){$j}})
-   if($matches.Count -ne 1){throw 'avatar not ready'};$j=$matches[0]
-   if($j.stage -ne 'Avatar Ready' -or $j.error -or $j.lease -or -not $j.validation.passed){throw 'avatar not ready or unresolved exception'}
-   if(-not $auth){throw 'stale production input'};Assert-LFAvatarJobBinding $auth.snapshot $j
+   $matches=@(foreach($jid in $queue.jobs){$j=Read-LFAvatarJob $Dir $jid;if($j.slide -eq $s.number -and $j.stage -eq 'Avatar Ready' -and -not $j.error -and -not $j.lease -and $j.validation.passed){$j}})
+   if(-not $matches.Count){throw 'avatar not ready or unresolved exception'};$j=$matches[-1]
+   $null=Assert-LFAvatarArtifactAuthorization $Dir $j
+   if((ConvertTo-LFCanonicalJson $j.preset) -ne (ConvertTo-LFCanonicalJson $selection.snapshot.avatar_preset)){throw 'stale avatar generation binding'}
    if($j.row.narration.sha256 -ne $s.narration.sha256 -or $j.validation.narration_sha256 -ne $s.narration.sha256 -or -not $j.validation.authoritative_audio_verified){throw 'stale avatar or audio binding'}
    if((ConvertTo-LFCanonicalJson $j.row.preparation) -ne (ConvertTo-LFCanonicalJson $s.preparation) -or -not $j.validation.pause_verified -or [double]$j.validation.prepared_pause_seconds -ne [double]$s.preparation.post_speech_silence_seconds){throw 'prepared pause binding mismatch'}
    $path=Resolve-LFAvatarPath $Dir $j.output_path
    if(-not (Test-Path $path) -or (Get-FileHash $path).Hash -ne $j.output_sha256 -or $j.validation.output_sha256 -ne $j.output_sha256){throw 'avatar missing or hash mismatch'}
    $override=@($placement.overrides|Where-Object slide -eq $s.number)|Select-Object -First 1
    $pos=if($override){$override.placement}elseif($s.placement_override){$s.placement_override}else{$p.preset.placement};Assert-LFPlacement $pos $p
-   $rows+=@{slide=$s.number;take=$s.selected_take;job=$j.id;path=$path;sha256=$j.output_sha256;narration=$s.narration;preparation=$s.preparation;placement=$pos;validation=$j.validation}
+   $rows+=@{slide=$s.number;take=$s.selected_take;job=$j.id;authorization=$j.authorization;path=$path;sha256=$j.output_sha256;narration=$s.narration;preparation=$s.preparation;placement=$pos;validation=$j.validation}
   }catch{$errors+="Slide $($s.number) - $($_.Exception.Message)"}
  }
  if(-not $selection.snapshot.slides.Count){$errors+='No enabled slides.'}
@@ -60,7 +64,9 @@ function Request-LFAssembly($Root,$Id,$Expected,$Folder){
   Write-LFImmutableJson (Join-Path $attemptDir 'input.json') $input.snapshot
   if($a.current){$a.history+=,$a.current}
   $name=[regex]::Replace($input.project_name,'[^\p{L}\p{N} _-]','_').Trim();if(-not $name){$name='Lecture'};if($name.Length -gt 55){$name=$name.Substring(0,55)}
-  $a.current=[pscustomobject]@{id=$attempt;binding=$Expected;stage='Queued';slide=0;total=$input.snapshot.slides.Count;folder=$folderPath;filename=($name+'_RECORDING.pptx');output=$null;output_sha256=$null;error=$null;lease=$null;created_utc=[DateTime]::UtcNow.ToString('o')}
+  $a.current=[pscustomobject]@{id=$attempt;binding=$Expected;stage='Queued';slide=0;total=$input.snapshot.slides.Count;folder=$folderPath;filename=($name+'_RECORDING.pptx');output=$null;output_sha256=$null;error=$null;lease=$null;events=@();created_utc=[DateTime]::UtcNow.ToString('o')}
+  Add-LFAssemblyEvent $a.current 'Readiness validated' 0 ($input.snapshot.slides.Count.ToString()+' slides ready')
+  Add-LFAssemblyEvent $a.current 'Assembly request accepted'
   Write-LFJson (Join-Path $dir 'assembly.json') $a;$a
  }
 }

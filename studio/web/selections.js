@@ -6,7 +6,7 @@ async function loadSelectionReview(restore=false){
  if(project?.id!==id)return;
  selectionReview=d;selectionProjectId=id;
  if(restore){
-  $('selection-summary').hidden=!d.saved||d.saved.phase==='narration';
+  $('selection-summary').hidden=false;
   $('review-panel').hidden=!!d.saved&&d.saved.phase!=='narration';
   if(d.saved?.phase==='narration'&&d.saved.slide){reviewNumber=d.saved.slide;$('review-panel').hidden=false;renderReview();}
  }
@@ -15,6 +15,12 @@ async function loadSelectionReview(restore=false){
 function renderSelectionReview(){
  const d=selectionReview;if(!d||!project||selectionProjectId!==project.id)return;
  const s=d.current.snapshot;
+ $('selection-summary').hidden=false;
+ const selected=s.slides.filter(r=>r.status==='narration selected').length;
+ $('avatar-readiness').textContent=selected+' / '+s.slides.length+' required narration takes selected and valid';
+ const avatar=s.avatar_preset?.avatar;
+ $('avatar-configuration').textContent=avatar?'Avatar: '+avatar.name+' ('+avatar.id+') | Background RGB: '+avatar.background_rgb.join(', ')+' | Crop: '+avatar.crop.width+' x '+avatar.crop.height+' at '+avatar.crop.x+', '+avatar.crop.y+' | Selected narration is the final audio.':'Avatar configuration unavailable; review the project preset.';
+ $('review-production').disabled=selectionBusy;
  $('authorization-status').textContent=d.authorization_status==='authorized'?'Avatar generation authorized — waiting for production worker':d.authorization_status==='stale'?'Avatar authorization stale — review and authorize again':d.authorization_status==='consumed'?'Avatar authorization already consumed — resubmission blocked':s.can_authorize?'NARRATION SELECTED — avatar generation not authorized':'Narration selections incomplete — avatar generation not authorized';
  $('summary-warning').textContent=d.review_stale?'The saved summary is stale. Click REVIEW SELECTIONS to review current inputs.':!s.can_authorize?'Resolve every missing, stale, or invalid selection before authorization.':'';
  $('selection-rows').replaceChildren();
@@ -23,7 +29,7 @@ function renderSelectionReview(){
   const cells=[`Slide ${r.number} — ${r.title}`,r.selected_take?`Take ${r.selected_take}`:'Missing',r.narration?`${r.narration.duration_seconds.toFixed(3)} s`:'—',r.preparation?.post_speech_silence_seconds?`${r.preparation.post_speech_silence_seconds.toFixed(3)} s prepared pause`:'None',r.status,r.reusable_avatar?'Reusable approved asset · 0 new jobs':r.narration?'1 new job':'Blocked'];
   for(const text of cells){const td=document.createElement('td');td.textContent=text;tr.append(td);}
   const td=document.createElement('td'),change=document.createElement('button');change.className='secondary';change.textContent='CHANGE';change.setAttribute('aria-label',`Change Slide ${r.number} narration`);change.onclick=()=>action(async()=>{
-   await save();await request('/api/selection-change?id='+project.id,{slide:r.number});await loadNarration();reviewNumber=r.number;$('selection-summary').hidden=true;$('review-panel').hidden=false;renderReview();$('review-panel').scrollIntoView({block:'start'});
+   await save();await request('/api/selection-change?id='+project.id,{slide:r.number});await loadNarration();reviewNumber=r.number;$('selection-summary').hidden=false;$('review-panel').hidden=false;renderReview();$('review-panel').scrollIntoView({block:'start'});
   });td.append(change);tr.append(td);$('selection-rows').append(tr);
  }
  $('selection-cost').textContent=`${s.slides.length} enabled slides · ${s.expected_new_provider_jobs} NEW HeyGen jobs expected · ${s.reusable_avatars} reusable approved avatars`;
@@ -44,10 +50,10 @@ async function reviewSelections(){
  await request('/api/selection-review?id='+project.id,{expected:selectionReview.current.binding_sha256,phase:'review'});
  await loadSelectionReview();$('review-panel').hidden=true;$('selection-summary').hidden=false;$('selection-summary').scrollIntoView({block:'start'});
 }
-$('review-selections').onclick=()=>action(reviewSelections);
+$('review-selections').onclick=$('review-production').onclick=()=>action(reviewSelections);
 $('authorize-preview').onclick=()=>action(async()=>{
  if(selectionBusy)return;selectionBusy=true;renderSelectionReview();
- try{await request('/api/selection-review?id='+project.id,{expected:selectionReview.review.id,phase:'confirmation'});await loadSelectionReview();$('authorization-confirmation').scrollIntoView({block:'start'});}finally{selectionBusy=false;renderSelectionReview();}
+ try{await save();await loadSelectionReview();await request('/api/selection-review?id='+project.id,{expected:selectionReview.current.binding_sha256,phase:'confirmation'});await loadSelectionReview();$('authorization-confirmation').scrollIntoView({block:'start'});}finally{selectionBusy=false;renderSelectionReview();}
 });
 $('confirm-avatars').onclick=()=>action(async()=>{
  if(selectionBusy)return;selectionBusy=true;renderSelectionReview();

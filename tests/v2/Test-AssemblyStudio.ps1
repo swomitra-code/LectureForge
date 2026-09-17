@@ -37,6 +37,32 @@ $checks=[Collections.Generic.List[object]]::new()
 function Check($Name,[bool]$OK){$checks.Add(@{name=$Name;passed=$OK});Write-LFJson (Join-Path $root 'results.json') @{checks=@($checks);project_id=$id;project_root=$dir;url="http://127.0.0.1:$Port/";elevenlabs_calls=0;heygen_calls=0};if(-not $OK){throw "FAIL: $Name"};"PASS: $Name"}
 $ready=Get-LFAssemblyReadiness $root $id
 Check 'All 14 existing approved avatars pass readiness' ($ready.ready -and $ready.snapshot.slides.Count -eq 14)
+# A failed slide may be replaced under a one-slide authorization without
+# invalidating successful artifacts from the consumed original batch.
+$failed=Read-LFAvatarJob $dir $jobs[-1];$failed.stage='Exception';$failed.provider_status='failed';$failed.provider_terminal=$true;$failed.error='Fixture provider failure';Save-LFAvatarJob $dir $failed
+Check 'One failed slide blocks assembly' (-not (Get-LFAssemblyReadiness $root $id).ready)
+$scope=Read-LFProject $root $id;foreach($slide in $scope.slides){$slide.enabled=$slide.number -eq $failed.slide};$scope.version++;Write-LFJson (Join-Path $dir 'project.json') $scope
+$replacementSummary=Get-LFAvatarReplacementSummary $root $id $failed.id
+$replacement=Confirm-LFAvatarReplacement $root $id $failed.id $true $replacementSummary.selection_binding
+$replacementJob=Read-LFAvatarJob $dir $replacement.job;$replacementJob.output_path=$failed.output_path;$replacementJob.output_sha256=$failed.output_sha256;$replacementJob.validation=$failed.validation;$replacementJob.stage='Avatar Ready';$replacementJob.error=$null;$replacementJob.provider_status='completed';$replacementJob.provider_terminal=$true;Save-LFAvatarJob $dir $replacementJob
+$scope=Read-LFProject $root $id;foreach($slide in $scope.slides){$slide.enabled=$true};$scope.version++;Write-LFJson (Join-Path $dir 'project.json') $scope
+$ready=Get-LFAssemblyReadiness $root $id
+Check 'Replacement authorization restores readiness without reauthorizing original slides' ($ready.ready -and $ready.snapshot.slides.Count -eq 14 -and $ready.snapshot.slides[-1].job -eq $replacement.job -and @($ready.snapshot.slides|Where-Object {$_.slide -ne $failed.slide -and $_.job -notin $jobs}).Count -eq 0)
+Check 'Consumed original authorization remains valid artifact evidence after scope and review-summary changes' ((Test-Path (Get-LFApprovalPath $dir (Read-LFAvatarJob $dir $jobs[0]).authorization consumed)) -and $ready.ready)
+Save-LFReviewNavigation $root $id 1
+Check 'Current Review Selections navigation does not invalidate successful artifacts' ((Get-LFAssemblyReadiness $root $id).ready)
+$narration=Get-LFNarration $root $id;$originalTake=$narration.slides[0].selected_take;$alternateTake=if($originalTake -eq 1){2}else{1}
+Set-LFNarrationSelection $root $id 1 $narration.slides[0].revision $alternateTake
+$changed=Get-LFAssemblyReadiness $root $id
+Check 'Changing one selected narration take invalidates only that slide' (-not $changed.ready -and @($changed.errors|Where-Object {$_ -like 'Slide 1 -*'}).Count -eq 1 -and $changed.errors.Count -eq 1)
+Set-LFNarrationSelection $root $id 1 $narration.slides[0].revision $originalTake
+Check 'Restoring the authorized narration binding restores readiness' ((Get-LFAssemblyReadiness $root $id).ready)
+$bindingJob=Read-LFAvatarJob $dir $jobs[1];$savedPreset=$bindingJob.preset;$bindingJob.preset=[pscustomobject]@{id='changed-generation-binding'};Save-LFAvatarJob $dir $bindingJob
+$changed=Get-LFAssemblyReadiness $root $id
+Check 'Changing one job generation binding invalidates only that slide' (-not $changed.ready -and $changed.errors.Count -eq 1 -and $changed.errors[0] -like 'Slide 2 -*')
+$bindingJob.preset=$savedPreset;Save-LFAvatarJob $dir $bindingJob
+Check 'Restoring the immutable generation binding restores readiness' ((Get-LFAssemblyReadiness $root $id).ready)
+Check 'Replacement readiness performs zero paid provider calls' ((Get-LFNarration $root $id).provider_calls -eq 0 -and (Get-LFAvatarStatus $root $id).provider_calls -eq 0)
 $job=Read-LFAvatarJob $dir $jobs[7];$saved=$job.output_path;$job.output_path='avatars/missing.mp4';Save-LFAvatarJob $dir $job
 Check 'Missing avatar blocks assembly' (-not (Get-LFAssemblyReadiness $root $id).ready)
 $job.output_path=$saved;$hash=$job.validation.narration_sha256;$job.validation.narration_sha256='STALE';Save-LFAvatarJob $dir $job
