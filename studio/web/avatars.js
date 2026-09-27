@@ -1,7 +1,8 @@
 'use strict';
 let avatarBusy=false,avatarState=null,avatarShown=null,avatarReadinessSignature=null,replacementSummary=null;
+const avatarRecoveryDrafts=new Map();
 async function loadAvatarStatus(){
- if(!project||stopped||avatarBusy)return;avatarBusy=true;const id=project.id;
+ if(!project||stopped||avatarBusy||(document.activeElement&&$('avatar-jobs').contains(document.activeElement)&&document.activeElement.tagName==='INPUT'))return;avatarBusy=true;const id=project.id;
  try{
   const d=await request('/api/avatar-status?id='+id);if(project?.id!==id)return;avatarState=d;
   const signature=JSON.stringify([id,d.authorization,d.ready,d.exceptions,d.jobs.map(j=>[j.id,j.stage])]);
@@ -15,15 +16,23 @@ async function loadAvatarStatus(){
    const row=document.createElement('article'),title=document.createElement('h3');title.textContent=`Slide ${j.slide} — ${j.stage}${j.stage==='Avatar Ready'&&j.validation?.prepared_pause_seconds?` — ${j.validation.prepared_pause_seconds.toFixed(3)} s pause verified`:''}`;row.append(title);
    const details=document.createElement('details');details.dataset.job=j.id;details.open=open.has(j.id);const label=document.createElement('summary');label.textContent='View Details';const pre=document.createElement('pre');pre.style.whiteSpace='pre-wrap';pre.textContent=JSON.stringify({take:j.take,authorization:j.authorization,job_id:j.video_id,narration_sha256:j.row.narration.sha256,output:j.output_path,placement:j.placement,validation:j.validation,error:j.error,history:j.history},null,2);details.append(label,pre);row.append(details);
    if(j.stage==='Exception'){
-    const error=document.createElement('p');error.textContent=j.error;row.append(error);
+    const recoverable=j.exception_kind==='existing submission'||(j.submission_intent&&!j.recovery&&j.provider_status!=='failed');
+    const error=document.createElement('p');error.textContent=recoverable?'Existing HeyGen submission could not be linked automatically. Recover the existing video to continue.':j.error;row.append(error);
+    if(recoverable){
+     const key=id+'/'+j.id, draft=avatarRecoveryDrafts.get(key)||{open:false,url:''};
+     const box=document.createElement('div'),toggle=document.createElement('button');toggle.className='secondary';toggle.textContent='Recover Existing HeyGen Video';box.hidden=!draft.open;
+     toggle.onclick=()=>{draft.open=!draft.open;box.hidden=!draft.open;avatarRecoveryDrafts.set(key,draft);};
+     const label=document.createElement('label'),input=document.createElement('input'),submit=document.createElement('button');label.textContent='Paste HeyGen video URL: ';input.type='url';input.placeholder='https://app.heygen.com/videos/...';input.value=draft.url;input.oninput=()=>{draft.url=input.value;avatarRecoveryDrafts.set(key,draft);};label.append(input);submit.textContent='Recover & Continue';
+     submit.onclick=()=>action(async()=>{submit.disabled=true;try{const result=await request('/api/avatar-recover?id='+id,{job:j.id,url:input.value.trim()});avatarRecoveryDrafts.delete(key);await loadAvatarStatus();message(result.stage==='Exception'?'Existing HeyGen video recovered, but the provider reports that it failed. No new generation was created.':'Existing HeyGen video recovered. LectureForge is continuing avatar processing.');}finally{submit.disabled=false;}});
+     box.append(label,submit);row.append(toggle,box);
+    }
     let actions=[];
     if(j.video_id&&j.provider_status!=='failed')actions.push(['resume','Resume known HeyGen job']);
     if(j.video_id&&j.provider_status==='completed')actions.push(['download','Retry avatar download']);
     if(j.raw_path)actions.push(['convert','Retry white-avatar conversion']);
     if(j.output_path||j.row.reusable_avatar)actions.push(['validate','Retry local validation']);
-    if(j.exception_kind==='submission uncertain'&&!j.video_id)actions.push(['reconcile','Reconcile existing job ID']);
     if(j.provider_status==='failed')actions.push(['replacement','Retry / Re-authorize']);
-    for(const [kind,text] of actions){const b=document.createElement('button');b.className='secondary';b.textContent=text;b.onclick=()=>action(async()=>{if(kind==='replacement'){replacementSummary=await request('/api/avatar-replacement?id='+project.id+'&job='+j.id);const preset=replacementSummary.avatar_preset?.avatar;$('replacement-summary').textContent=`Slide ${replacementSummary.slide} — ${replacementSummary.title} · Take ${replacementSummary.selected_take} · Avatar ${preset?.name||preset?.id} · ${replacementSummary.expected_new_provider_jobs} NEW HeyGen job · ${replacementSummary.reusable_avatars} reused · PAID replacement generation`;$('replacement-confirmation').hidden=false;$('replacement-confirmation').scrollIntoView({block:'start'});return;}const body={job:j.id,action:kind};if(kind==='reconcile'){body.video_id=prompt('Existing HeyGen job ID from the provider account. This does not create a replacement.');if(!body.video_id)return;}await request('/api/avatar-retry?id='+project.id,body);await loadAvatarStatus();});row.append(b);}
+    for(const [kind,text] of actions){const b=document.createElement('button');b.className='secondary';b.textContent=text;b.onclick=()=>action(async()=>{if(kind==='replacement'){replacementSummary=await request('/api/avatar-replacement?id='+project.id+'&job='+j.id);const preset=replacementSummary.avatar_preset?.avatar;$('replacement-summary').textContent=`Slide ${replacementSummary.slide} — ${replacementSummary.title} · Take ${replacementSummary.selected_take} · Avatar ${preset?.name||preset?.id} · ${replacementSummary.expected_new_provider_jobs} NEW HeyGen job · ${replacementSummary.reusable_avatars} reused · PAID replacement generation`;$('replacement-confirmation').hidden=false;$('replacement-confirmation').scrollIntoView({block:'start'});return;}const body={job:j.id,action:kind};await request('/api/avatar-retry?id='+project.id,body);await loadAvatarStatus();});row.append(b);}
    }
    $('avatar-jobs').append(row);
   }

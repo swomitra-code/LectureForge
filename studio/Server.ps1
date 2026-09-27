@@ -117,6 +117,9 @@ try{
     $data=[Text.Encoding]::UTF8.GetString($body)|ConvertFrom-Json
     Set-LFAvatarPause $root $query['id'] ([bool]$data.paused)
     Reply $stream 200 @{saved=$true}
+   }elseif($method -eq 'POST' -and $path -eq '/api/avatar-recover'){
+    $data=[Text.Encoding]::UTF8.GetString($body)|ConvertFrom-Json
+    Reply $stream 200 (Recover-LFAvatarVideo $root $query['id'] $data.job $data.url)
    }elseif($method -eq 'POST' -and $path -eq '/api/avatar-retry'){
     $data=[Text.Encoding]::UTF8.GetString($body)|ConvertFrom-Json
     Repair-LFAvatarJob $root $query['id'] $data.job $data.action $data.video_id

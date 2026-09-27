@@ -1,5 +1,55 @@
 $ErrorActionPreference='Stop'
 Import-Module (Join-Path $PSScriptRoot 'Authorization.psm1')
+Import-Module (Join-Path $PSScriptRoot 'HeyGenProvider.psm1')
+function Test-LFAvatarSameAsset($A,$B){
+ $A.slide -eq $B.slide -and $A.take -eq $B.take -and $A.row.narration.sha256 -eq $B.row.narration.sha256 -and (ConvertTo-LFCanonicalJson $A.preset) -eq (ConvertTo-LFCanonicalJson $B.preset)
+}
+function Resolve-LFAvatarSubmission($Dir,$Job){
+ if($Job.exception_kind -ne 'existing submission'){return $Job}
+ $oldId=$Job.existing_submission_id
+ if(-not $oldId -and $Job.error -match '^Existing provider submission ([a-f0-9]{16}) must be reconciled before any replacement\.$'){$oldId=$Matches[1]}
+ if(-not $oldId){throw 'Existing submission lineage is unavailable.'}
+ $old=Read-LFAvatarJob $Dir $oldId
+ if(-not $old.submission_intent -or -not (Test-LFAvatarSameAsset $old $Job)){throw 'Existing submission does not match the slide and narration.'}
+ $old
+}
+function Assert-LFAvatarRecoveryInputs($Root,$Id,$Dir,$Job){
+ # Finishing an existing paid asset does not authorize any new provider generation.
+ if(-not $Job.submission_intent -or $Job.stage -in @('Queued','Submitting to HeyGen')){throw 'Recovery cannot enter a generation stage.'}
+ $null=Assert-LFAvatarArtifactAuthorization $Dir $Job
+ $current=Get-LFSelectionInputs $Root $Id $Dir
+ $row=@($current.snapshot.slides|Where-Object number -eq $Job.slide)[0]
+ if(-not $row -or $row.selected_take -ne $Job.take -or $row.narration.sha256 -ne $Job.row.narration.sha256 -or (ConvertTo-LFCanonicalJson $current.snapshot.avatar_preset) -ne (ConvertTo-LFCanonicalJson $Job.preset)){throw 'Recovered asset no longer matches the selected take, narration or avatar preset.'}
+ if((Get-FileHash (Resolve-LFNarrationAsset $Dir $Job.row.narration.path)).Hash -ne $Job.row.narration.sha256){throw 'Authoritative narration changed.'}
+}
+function Recover-LFAvatarVideo($Root,$Id,$Job,[string]$Url){
+ $candidate=Get-LFHeyGenUrlCandidate $Url
+ Invoke-LFNarrationLock $Root $Id {param($dir)
+  $q=Read-LFAvatarQueue $dir
+  if($Job -notin $q.jobs){throw 'Submission is not in this project queue.'}
+  $j=Resolve-LFAvatarSubmission $dir (Read-LFAvatarJob $dir $Job)
+  if($j.video_id -and $j.video_id -ne $candidate){throw 'Submission is already associated with a different HeyGen video.'}
+  if($j.recovery -and $j.video_id -eq $candidate){return @{recovered=$true;already_reconciled=$true;job=$j.id;stage=$j.stage}}
+  if($j.lease){throw 'Work is active. Wait for completion before recovering.'}
+  if(-not $j.submission_intent -or $j.stage -notin @('Exception','Submitting to HeyGen','Queued','HeyGen Processing')){throw 'No unresolved existing provider submission to recover.'}
+  # A crashed queued/submitting record may be recovered, but never run as Queued.
+  $originalStage=$j.stage;$j.stage='Exception'
+  Assert-LFAvatarRecoveryInputs $Root $Id $dir $j
+  $j.stage=$originalStage
+  $policy=Join-Path $Root 'avatar-policy.json'
+  if((Test-Path $policy) -and (Get-Content -Raw $policy|ConvertFrom-Json).provider_calls_enabled -eq $false){throw 'Provider calls disabled for this isolated fixture runtime.'}
+  # No durable fields change until the read-only provider lookup and binding checks succeed.
+  $video=Get-LFHeyGenRecoveryVideo $Url $Id $j.slide $j.take
+  $j.video_id=[string]$video.id;$j.provider_status=$video.status;$j.provider_terminal=$video.status -in @('completed','failed');$j.provider_calls++
+  $j|Add-Member -Force NoteProperty recovery ([pscustomobject]@{url=$Url;video_id=$video.id;verified_title=$video.title;timestamp=[DateTime]::UtcNow.ToString('o');submission=$j.id})
+  $j.history+=@('ReconciliationStarted','ProviderJobRecovered');$j.error=$null;$j.exception_kind=$null;$j.next_poll_utc=$null
+  $j.stage='HeyGen Processing'
+  if($video.status -eq 'completed' -and $video.video_url){$j.download_url=$video.video_url;$j.stage='Downloading Avatar'}
+  if($video.status -eq 'failed'){$j.stage='Exception';$j.exception_kind='provider recovery';$j.error='Recovered HeyGen video failed. A replacement requires a new explicit authorization.'}
+  $j.history+=,$j.stage;Save-LFAvatarJob $dir $j
+  @{recovered=$true;already_reconciled=$false;job=$j.id;stage=$j.stage}
+ }
+}
 function Resolve-LFAvatarPath($Dir,$Relative){
  if($Relative -notmatch '^(avatars/[a-zA-Z0-9_-]{1,40}\.mp4|a/[a-f0-9]{16}/(raw[a-z0-9-]*\.webm|w-[a-f0-9]{8}\.mp4))$'){throw 'Invalid avatar media path.'}
  $path=[IO.Path]::GetFullPath((Join-Path $Dir $Relative));if($path.Length -ge 250 -or -not $path.StartsWith(([IO.Path]::GetFullPath($Dir).TrimEnd('\')+'\'),[StringComparison]::OrdinalIgnoreCase)){throw 'Unsafe avatar media path.'};$path
@@ -86,7 +136,7 @@ function Start-LFAvatarBatch($Root,$Id){
        if($old.raw_path -and (Test-Path (Resolve-LFAvatarPath $dir $old.raw_path)) -and (Get-FileHash (Resolve-LFAvatarPath $dir $old.raw_path)).Hash -eq $old.raw_sha256){$job.raw_path=$old.raw_path;$job.raw_sha256=$old.raw_sha256;$job.stage='Avatar Downloaded'}
        break
       }
-      if($old.submission_intent -and -not $old.provider_terminal){$job.stage='Exception';$job.exception_kind='existing submission';$job.error='Existing provider submission '+$old.id+' must be reconciled before any replacement.';break}
+      if($old.submission_intent -and -not $old.provider_terminal){$job.existing_submission_id=$old.id;$job.stage='Exception';$job.exception_kind='existing submission';$job.error='Existing provider submission '+$old.id+' must be reconciled before any replacement.';break}
      }
     }
     Write-LFJson $path $job
@@ -100,19 +150,20 @@ function Get-LFAvatarStatus($Root,$Id){
  Invoke-LFNarrationLock $Root $Id {param($dir)
   $q=Read-LFAvatarQueue $dir;$jobs=@(foreach($jid in $q.jobs){Read-LFAvatarJob $dir $jid})
   $latest=$q.batches|Select-Object -Last 1;$active=@($jobs|Group-Object slide|ForEach-Object {$_.Group|Select-Object -Last 1}|Sort-Object slide)
+  # Blocked rows follow their recovered original; only that original is processed.
+  $active=@(foreach($j in $active){if($j.exception_kind -eq 'existing submission'){$source=Resolve-LFAvatarSubmission $dir $j;if($source.recovery){$source}else{$j}}else{$j}})
   $stale=$false;if($latest){$a=Read-LFApproval $dir $latest.authorization 'authorization';$p=Get-Content -Raw (Join-Path $dir 'project.json')|ConvertFrom-Json;$n=Read-LFNarrationFile $dir;$intent=if($n.PSObject.Properties.Name -contains 'intent_revision'){$n.intent_revision}else{0};$stale=($p.version -ne $a.snapshot.project_revision -or $intent -ne $a.snapshot.intent_revision)}
   @{stale=$stale;paused=$q.paused;authorization=if($latest){$latest.authorization}else{$null};jobs=$active;historical_jobs=@($jobs|Where-Object {$_.id -notin $active.id});authorized=$active.Count;ready=@($active|Where-Object stage -eq 'Avatar Ready').Count;exceptions=@($active|Where-Object stage -eq 'Exception').Count;queued=@($active|Where-Object stage -eq 'Queued').Count;provider_processing=@($active|Where-Object {$_.submission_intent -and -not $_.provider_terminal}).Count;provider_calls=($jobs|Measure-Object provider_calls -Sum).Sum}
  }
 }
 function Set-LFAvatarPause($Root,$Id,[bool]$Paused){Invoke-LFNarrationLock $Root $Id {param($dir) $q=Read-LFAvatarQueue $dir;$q.paused=$Paused;Write-LFJson (Join-Path $dir 'avatar-queue.json') $q}}
 function Repair-LFAvatarJob($Root,$Id,$Job,$Action,$VideoId=$null){
+ if($Action -eq 'reconcile'){throw 'Use Recover Existing HeyGen Video with the provider video URL.'}
  Invoke-LFNarrationLock $Root $Id {param($dir)
   $j=Read-LFAvatarJob $dir $Job;if($j.lease){throw 'Work is active. Wait for completion.'};if($j.stage -ne 'Exception'){throw 'Only an exception may be retried.'}
-  $authorization=Assert-LFAvatarInputs $Root $Id $dir $j.authorization
-  Assert-LFAvatarJobBinding $authorization.snapshot $j
+  if($j.recovery){Assert-LFAvatarRecoveryInputs $Root $Id $dir $j}else{$authorization=Assert-LFAvatarInputs $Root $Id $dir $j.authorization;Assert-LFAvatarJobBinding $authorization.snapshot $j}
   switch($Action){
    'resume'{if(-not $j.video_id -or $j.provider_status -eq 'failed'){throw 'No resumable provider job.'};$j.stage='HeyGen Processing'}
-   'reconcile'{if(-not $j.submission_intent -or $j.video_id -or $VideoId -notmatch '^[a-zA-Z0-9_-]{8,100}$'){throw 'Enter the existing provider job ID; this never submits a replacement.'};$j.video_id=$VideoId;$j.stage='HeyGen Processing'}
    'download'{if(-not $j.video_id -or $j.provider_status -ne 'completed'){throw 'No completed job to download.'};$j.stage='HeyGen Processing'}
    'convert'{if(-not $j.raw_path){throw 'No downloaded avatar.'};$j.stage='Avatar Downloaded'}
    'validate'{
@@ -148,7 +199,7 @@ function Get-LFAvatarTasks($Root,$Owner,[int]$Capacity=3){
      $j.lease=$null
     }
     if($j.next_poll_utc -and [DateTimeOffset]::Parse($j.next_poll_utc).UtcDateTime -gt [DateTime]::UtcNow){continue}
-    try{if(-not $c){$c=Get-LFSelectionInputs $Root $p.id $dir};if($c.binding_sha256 -ne $j.authorization){throw 'Authorization stale. Return to Review Selections.'};Assert-LFAvatarJobBinding $c.snapshot $j}catch{$j.stage='Exception';$j.exception_kind='stale authorization';$j.error=$_.Exception.Message;Save-LFAvatarJob $dir $j;continue}
+    try{if($j.recovery){Assert-LFAvatarRecoveryInputs $Root $p.id $dir $j}else{if(-not $c){$c=Get-LFSelectionInputs $Root $p.id $dir};if($c.binding_sha256 -ne $j.authorization){throw 'Authorization stale. Return to Review Selections.'};Assert-LFAvatarJobBinding $c.snapshot $j}}catch{$j.stage='Exception';$j.exception_kind='stale authorization';$j.error=$_.Exception.Message;Save-LFAvatarJob $dir $j;continue}
     if($j.stage -eq 'Queued' -and -not $j.row.reusable_avatar -and $occupied -ge 3){continue}
     $j.lease=@{owner=$Owner;pid=$PID;started=(Get-Process -Id $PID).StartTime.ToUniversalTime().Ticks.ToString()};Save-LFAvatarJob $dir $j
     return @{id=$p.id;job=$jid;new_provider=($j.stage -eq 'Queued' -and -not $j.row.reusable_avatar)}

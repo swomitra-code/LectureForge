@@ -19,4 +19,20 @@ function Send-LFHeyGenAudio([string]$Path){
   try{if(-not $response.IsSuccessStatusCode){throw 'Upload failed.'};$r=$response.Content.ReadAsStringAsync().GetAwaiter().GetResult()|ConvertFrom-Json;$id=$r.data.asset_id;if(-not $id){$id=$r.data.id};if(-not $id){throw 'Upload returned no asset ID.'};[string]$id}finally{$response.Dispose()}
  }catch{throw 'HeyGen audio upload failed; no generation was submitted.'}finally{$form.Dispose();$stream.Dispose();$client.Dispose()}
 }
-Export-ModuleMember -Function Invoke-LFHeyGen,Send-LFHeyGenAudio
+function Get-LFHeyGenUrlCandidate([string]$Url){
+ $uri=$null
+ if(-not [uri]::TryCreate($Url,[UriKind]::Absolute,[ref]$uri) -or $uri.Scheme -ne 'https' -or $uri.Host -ne 'app.heygen.com' -or -not $uri.IsDefaultPort -or $uri.UserInfo -or $uri.Query -or $uri.Fragment -or $uri.AbsolutePath -notmatch '^/videos/(?:[a-zA-Z0-9_-]+-)?([a-fA-F0-9]{32})/?$'){throw 'Paste a valid https://app.heygen.com/videos/... video URL.'}
+ $Matches[1].ToLowerInvariant()
+}
+function Get-LFHeyGenRecoveryVideo([string]$Url,[string]$ProjectId,[int]$Slide,[int]$Take){
+ $candidate=Get-LFHeyGenUrlCandidate $Url
+ # A URL suffix is only a candidate: verify it using the existing v3 GET API.
+ try{$video=Invoke-LFHeyGen GET ('/v3/videos/'+$candidate)}catch{if($_.Exception.Message -match 'HTTP 404'){throw 'HeyGen video cannot be found in this account.'};throw}
+ if(-not $video -or $video.id -ne $candidate){throw 'HeyGen video cannot be found or its API identifier does not match.'}
+ if($video.video_page_url -and (Get-LFHeyGenUrlCandidate $video.video_page_url) -ne $candidate){throw 'HeyGen video page does not match the API asset.'}
+ $expected='LectureForge '+$ProjectId+' Slide '+$Slide+' Take '+$Take
+ if($video.title -cne $expected){throw 'HeyGen video title does not match this LectureForge project, slide and take. Recovery was not applied.'}
+ if($video.status -notin @('pending','queued','waiting','processing','completed','failed')){throw 'Unrecognized HeyGen status. Recovery was not applied.'}
+ $video
+}
+Export-ModuleMember -Function Invoke-LFHeyGen,Send-LFHeyGenAudio,Get-LFHeyGenUrlCandidate,Get-LFHeyGenRecoveryVideo

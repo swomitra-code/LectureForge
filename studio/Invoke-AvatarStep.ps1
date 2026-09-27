@@ -10,8 +10,8 @@ function ProviderAllowed {
  $policy=Join-Path $root 'avatar-policy.json'
  if(Test-Path $policy){$v=Get-Content -Raw $policy|ConvertFrom-Json;if($v.provider_calls_enabled -eq $false){throw 'Provider calls disabled for this isolated fixture runtime.'}}
 }
-function Request($Method,$Path,$Body=$null){ProviderAllowed;Update @{provider_calls=($j.provider_calls+1)};Invoke-LFHeyGen $Method $Path $Body}
-function CheckInputs { $approved=Assert-LFAvatarInputs $root $Id $dir $j.authorization;Assert-LFAvatarJobBinding $approved.snapshot $j;$receipt=Get-Content -Raw (Get-LFApprovalPath $dir $j.authorization consumed)|ConvertFrom-Json;if($receipt.consumer -ne 'lectureforge-avatar-worker-1' -or $receipt.authorization_sha256 -ne (Get-FileHash (Get-LFApprovalPath $dir $j.authorization authorization)).Hash){throw 'Incompatible authorization consumption receipt.'};if((Get-FileHash (Resolve-LFNarrationAsset $dir $j.row.narration.path)).Hash -ne $j.row.narration.sha256){throw 'Authoritative narration changed.'} }
+function Request($Method,$Path,$Body=$null){if($j.recovery -and $Method -ne 'GET'){throw 'Recovered submissions cannot create provider jobs.'};ProviderAllowed;Update @{provider_calls=($j.provider_calls+1)};Invoke-LFHeyGen $Method $Path $Body}
+function CheckInputs { if($j.recovery){Assert-LFAvatarRecoveryInputs $root $Id $dir $j;return};$approved=Assert-LFAvatarInputs $root $Id $dir $j.authorization;Assert-LFAvatarJobBinding $approved.snapshot $j;$receipt=Get-Content -Raw (Get-LFApprovalPath $dir $j.authorization consumed)|ConvertFrom-Json;if($receipt.consumer -ne 'lectureforge-avatar-worker-1' -or $receipt.authorization_sha256 -ne (Get-FileHash (Get-LFApprovalPath $dir $j.authorization authorization)).Hash){throw 'Incompatible authorization consumption receipt.'};if((Get-FileHash (Resolve-LFNarrationAsset $dir $j.row.narration.path)).Hash -ne $j.row.narration.sha256){throw 'Authoritative narration changed.'} }
 function ValidateWhite($Path,$Evidence){
  [void][IO.Directory]::CreateDirectory($Evidence)
  $n=Resolve-LFNarrationAsset $dir $j.row.narration.path;$np=Get-V2Probe $n;$probe=Get-V2Probe $Path;Assert-V2WhiteAvatarProfile $probe
