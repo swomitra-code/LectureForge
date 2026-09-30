@@ -25,7 +25,47 @@ function Get-LFProjectPath([string]$Root,[string]$Id){
  if($Id -notmatch '^[a-f0-9]{12}$'){throw 'Invalid project ID.'}
  Join-Path (Join-Path (Get-LFRoot $Root) 'Projects') $Id
 }
+function Restore-LFSourceTransaction([string]$Dir){
+ $journal=Join-Path $Dir 'source-refresh-transaction.json'
+ if(-not (Test-Path -LiteralPath $journal)){return}
+ $tx=Read-LFSharedJson $journal
+ if($tx.id -notmatch '^[a-f0-9]{32}$'){throw 'Invalid source transaction journal.'}
+ $root=Split-Path (Split-Path $Dir)
+ $backup=Join-Path $root ('SourceBackups/'+(Split-Path $Dir -Leaf)+'/'+$tx.id+'/project')
+ $inventory=Get-Content -Raw -LiteralPath (Join-Path (Split-Path $backup) 'inventory.json')|ConvertFrom-Json
+ # Restore only files owned by source refresh; never rewrite production assets.
+ foreach($name in 'source.pptx','project.json','assembly.json','thumbs'){
+  $dest=Join-Path $Dir $name;$src=Join-Path $backup $name
+  foreach($item in @($inventory|Where-Object {$_.path -eq $name -or $_.path.StartsWith($name+'\')})){
+   if((Get-FileHash -LiteralPath (Join-Path $backup $item.path)).Hash -ne $item.sha256){throw 'Source rollback backup failed verification.'}
+  }
+  if(Test-Path -LiteralPath $src){
+   if($name -eq 'thumbs'){
+    if([IO.Path]::GetFullPath($dest) -ne ([IO.Path]::GetFullPath($Dir).TrimEnd('\')+'\thumbs')){throw 'Unsafe thumbnail rollback path.'}
+    if(Test-Path -LiteralPath $dest){Remove-Item -LiteralPath $dest -Recurse -Force}
+    Copy-Item -LiteralPath $src -Destination $dest -Recurse
+   }else{[IO.File]::Copy($src,$dest,$true)}
+  }elseif(Test-Path -LiteralPath $dest){Remove-Item -LiteralPath $dest -Recurse -Force}
+ }
+ Remove-Item -LiteralPath $journal
+}
+function Invoke-LFProjectLock([string]$Root,[string]$Id,[scriptblock]$Action,[int]$Timeout=60000){
+ $dir=Get-LFProjectPath $Root $Id
+ $hash=[Security.Cryptography.SHA256]::Create()
+ try{$key=([BitConverter]::ToString($hash.ComputeHash([Text.Encoding]::UTF8.GetBytes($dir)))).Replace('-','').Substring(0,24)}finally{$hash.Dispose()}
+ # Same reentrant mutex as the existing narration/assembly/provider interfaces.
+ $mutex=[Threading.Mutex]::new($false,('Local\LFN-'+$key));$held=$false
+ try{
+  try{$held=$mutex.WaitOne($Timeout)}catch [Threading.AbandonedMutexException]{$held=$true}
+  if(-not $held){throw 'Project work is active. Wait for it to finish, then retry.'}
+  Restore-LFSourceTransaction $dir
+  & $Action $dir
+ }finally{if($held){$mutex.ReleaseMutex()};$mutex.Dispose()}
+}
 function Read-LFProject([string]$Root,[string]$Id){
+ Invoke-LFProjectLock $Root $Id {param($dir) Read-LFProjectUnlocked $Root $Id}
+}
+function Read-LFProjectUnlocked([string]$Root,[string]$Id){
  $dir=Get-LFProjectPath $Root $Id
  $p=Get-Content -Encoding UTF8 -LiteralPath (Join-Path $dir 'project.json') -Raw | ConvertFrom-Json
  if($p.schema -ne 'lectureforge-studio-1' -or $p.id -ne $Id){throw 'Unsupported project state.'}
@@ -43,9 +83,14 @@ function Get-LFPreset([string]$Id='renewable-energy'){
  if($Id -ne 'renewable-energy'){throw 'Unknown production preset.'}
  Get-Content -Encoding UTF8 -Raw (Join-Path $PSScriptRoot 'presets/renewable-energy.json') | ConvertFrom-Json
 }
-function New-LFProject([string]$Root,[string]$Name,[string]$OriginalName,[byte[]]$Bytes,[string]$Preset='renewable-energy'){
+function New-LFProject([string]$Root,[string]$Name,[string]$OriginalName,[byte[]]$Bytes,[string]$Preset='renewable-energy',[string]$ExternalPath=''){
  if([string]::IsNullOrWhiteSpace($Name) -or $Name.Length -gt 120){throw 'Enter a project name (1â€“120 characters).'}
  $settings=Get-LFPreset $Preset
+ if($ExternalPath){
+  $ExternalPath=[IO.Path]::GetFullPath($ExternalPath)
+  $h=[Security.Cryptography.SHA256]::Create();try{$uploadHash=([BitConverter]::ToString($h.ComputeHash($Bytes))).Replace('-','')}finally{$h.Dispose()}
+  if([IO.Path]::GetExtension($ExternalPath) -ne '.pptx' -or (Get-V2Asset $ExternalPath).sha256 -ne $uploadHash){throw 'External PowerPoint changed during import. Choose it again.'}
+ }
  $id=[guid]::NewGuid().ToString('N').Substring(0,12);$dir=Get-LFProjectPath $Root $id
  [void][IO.Directory]::CreateDirectory($dir)
  $source=Join-Path $dir 'source.pptx'
@@ -68,6 +113,7 @@ function New-LFProject([string]$Root,[string]$Name,[string]$OriginalName,[byte[]
   }
  }finally{$zip.Dispose()}
  $p=@{schema='lectureforge-studio-1';id=$id;name=$Name;version=1;created_utc=[DateTime]::UtcNow.ToString('o');source=@{path='source.pptx';original_name=[IO.Path]::GetFileName($OriginalName);sha256=$asset.sha256;slide_count=$info.slide_count;width_emu=$info.width_emu;height_emu=$info.height_emu};preset=$settings;slides=$slides;recording=$null;provider_calls=0;stage='project setup';assembly_policy='explicit final stage after all enabled avatars are ready'}
+ if($ExternalPath){$p.source.external_path=$ExternalPath}
  Write-LFJson (Join-Path $dir 'project.json') $p
  Read-LFProject $Root $id
 }
@@ -109,4 +155,4 @@ function Get-LFProjects([string]$Root){
  $dir=Join-Path (Get-LFRoot $Root) 'Projects'
  if(Test-Path $dir){foreach($f in Get-ChildItem -LiteralPath $dir -Directory){if($f.Name -match '^[a-f0-9]{12}$' -and (Test-Path (Join-Path $f.FullName 'project.json'))){$p=Get-Content -Encoding UTF8 -Raw (Join-Path $f.FullName 'project.json')|ConvertFrom-Json;[pscustomobject]@{id=$p.id;name=$p.name;slides=$p.source.slide_count}}}}
 }
-Export-ModuleMember -Function Read-LFSharedJson,Get-LFRoot,Write-LFJson,Get-LFProjectPath,Read-LFProject,Get-LFPreset,New-LFProject,Update-LFProject,Get-LFProjects,ConvertFrom-LFScripts
+Export-ModuleMember -Function Read-LFSharedJson,Get-LFRoot,Write-LFJson,Get-LFProjectPath,Read-LFProject,Get-LFPreset,New-LFProject,Update-LFProject,Get-LFProjects,ConvertFrom-LFScripts,Invoke-LFProjectLock,Restore-LFSourceTransaction

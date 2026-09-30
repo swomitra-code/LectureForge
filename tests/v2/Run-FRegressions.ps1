@@ -11,6 +11,9 @@ function StopFixture([int]$Port){
  $null=Invoke-RestMethod -Method Post ($url+'api/stop') -Headers @{'X-LF-Token'=$b.token} -ContentType application/json -Body '{}' -TimeoutSec 60
 }
 Run 'Test-NarrationCues.ps1' @()
+Run 'Test-SourceRefresh.ps1' @()
+& node (Join-Path $PSScriptRoot 'Test-SourceRefreshUI.cjs')
+if($LASTEXITCODE){throw 'Source refresh UI regression failed'}
 & node (Join-Path $PSScriptRoot 'Test-AvatarProductionUI.cjs')
 if($LASTEXITCODE){throw 'Avatar production UI regression failed'}
 Run 'Test-NarrationSettings.ps1' @()

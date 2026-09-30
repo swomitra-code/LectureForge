@@ -30,6 +30,32 @@ keys. Keep API keys out of scripts, lecture files, and browser fields.
 12. In PowerPoint, use **Record** to add cursor, laser pointer, ink, and teaching emphasis.
 13. Export your final lecture from PowerPoint.
 
+## Reload an edited source PowerPoint
+
+Use **Open Source Folder** to find the external PPTX. Edit it in PowerPoint, save
+and close it, then click **Reload Source PowerPoint** in LectureForge. Review the
+old/new SHA-256, slide counts, ordered slide identities, and dimensions. Confirm
+the reload when they are compatible. If the file moved, use **Choose Different
+Source PowerPoint**. Older projects ask for the source location on their first
+reload; new imports remember the location selected in the native file picker.
+
+Reload preserves narration, selected takes, avatar outputs, placements,
+authorizations, and recovery history. It never starts provider generation or
+assembly. It rebuilds all slide previews and moves prior assembly status into
+history; use **Create Recording PowerPoint** to assemble the edited source with
+the existing compatible avatars. Review existing narration yourself if the
+instructional meaning of a slide changed.
+
+Changed slide counts, ordered identities, or dimensions stop the reload; no slide
+state is automatically remapped. Pending provider work, assembly, or preview
+export also blocks replacement. A verified complete backup is retained under
+`%LOCALAPPDATA%\LectureForge\SourceBackups\<project-id>\<transaction-id>\project`.
+Backups include media and can be large. Failed commits roll back automatically;
+an interrupted commit rolls back on the next project read.
+
+**Open Project Folder** opens the internal project directory. Folder actions show
+the resolved path or an actionable error instead of silently returning.
+
 ## Selections and costs
 
 Selecting or changing a narration take saves your preference only. **Change

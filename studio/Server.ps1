@@ -5,6 +5,7 @@ Import-Module (Join-Path $PSScriptRoot 'Narration.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'Authorization.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'AvatarProduction.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'Assembly.psm1') -Force
+Import-Module (Join-Path $PSScriptRoot 'SourceRefresh.psm1') -Force
 Add-Type -AssemblyName System.Web
 $root=Get-LFRoot $RuntimeRoot;$token=[guid]::NewGuid().ToString('N')+[guid]::NewGuid().ToString('N')
 $listener=[Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback,$Port)
@@ -190,6 +191,23 @@ try{
     $t=@($r.takes|Where-Object number -eq $n)|Select-Object -First 1;if(-not (Test-LFTake $dir $t)){throw 'Narration media hash mismatch or take unavailable.'}
     $file=Resolve-LFNarrationAsset $dir $t.asset.path
     Send-Audio $stream $file $headers['range']
+   }elseif($method -eq 'POST' -and $path -eq '/api/source-choose'){
+    Reply $stream 200 (Start-LFSourceChoice $root)
+   }elseif($method -eq 'GET' -and $path -eq '/api/source-choice'){
+    Reply $stream 200 (Get-LFSourceChoice $root $query['choice'])
+   }elseif($method -eq 'POST' -and $path -eq '/api/source-compare'){
+    $data=[Text.Encoding]::UTF8.GetString($body)|ConvertFrom-Json
+    Reply $stream 200 (Get-LFSourceComparison $root $query['id'] $data.path)
+   }elseif($method -eq 'POST' -and $path -eq '/api/source-reload'){
+    $data=[Text.Encoding]::UTF8.GetString($body)|ConvertFrom-Json
+    Reply $stream 200 (Invoke-LFSourceRefresh $root $query['id'] $data.path $data.expected ($data.confirm -eq $true))
+   }elseif($method -eq 'POST' -and $path -eq '/api/source-folder'){
+    Reply $stream 200 (Open-LFProjectLocation $root $query['id'] source)
+   }elseif($method -eq 'POST' -and $path -eq '/api/new-source'){
+    $data=[Text.Encoding]::UTF8.GetString($body)|ConvertFrom-Json
+    $choice=Get-LFSourceChoice $root $data.choice
+    if($choice.state -ne 'selected'){throw 'Choose a source PowerPoint first.'}
+    Reply $stream 200 (New-LFProject $root $data.name ([IO.Path]::GetFileName($choice.path)) ([IO.File]::ReadAllBytes($choice.path)) $data.preset $choice.path)
    }elseif($method -eq 'POST' -and $path -eq '/api/new'){
     if($headers['content-type'] -ne 'application/octet-stream'){throw 'Expected a PPTX upload.'}
     Reply $stream 200 (New-LFProject $root $query['name'] $query['filename'] $body $query['preset'])
@@ -197,11 +215,10 @@ try{
     $update=[Text.Encoding]::UTF8.GetString($body)|ConvertFrom-Json
     Reply $stream 200 (Invoke-LFNarrationLock $root $query['id'] {param($dir) Update-LFProject $root $query['id'] $update})
    }elseif($method -eq 'POST' -and $path -eq '/api/folder'){
-    $null=Read-LFProject $root $query['id'];Start-Process explorer.exe -ArgumentList ('"'+(Get-LFProjectPath $root $query['id'])+'"')
-    Reply $stream 200 @{opened=$true}
+    Reply $stream 200 (Open-LFProjectLocation $root $query['id'] project)
    }elseif($method -eq 'POST' -and $path -eq '/api/stop'){
     $stopping=$true;Reply $stream 200 @{stopped=$true}
-   }elseif($method -eq 'GET' -and $path -in @('/','/studio.js','/studio.css','/selections.js','/avatars.js','/assembly.js')){
+   }elseif($method -eq 'GET' -and $path -in @('/','/studio.js','/source.js','/studio.css','/selections.js','/avatars.js','/assembly.js')){
     $file=if($path -eq '/'){'index.html'}else{$path.TrimStart('/')};$type=if($file.EndsWith('.js')){'text/javascript'}elseif($file.EndsWith('.css')){'text/css'}else{'text/html; charset=utf-8'}
     Reply $stream 200 ([IO.File]::ReadAllBytes((Join-Path $PSScriptRoot "web/$file"))) $type
    }else{Reply $stream 404 @{error='This action is not available in Milestone E.'}}

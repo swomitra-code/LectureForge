@@ -56,12 +56,15 @@ try{
     foreach($p in Get-LFProjects $root){
      $dir=Get-LFProjectPath $root $p.id;$request=Join-Path $dir 'thumbs/request.json'
      if(Test-Path $request){
-      $status=Join-Path $dir 'thumbs/status.json'
-      if(-not (Test-Path $status)){
-       Write-LFJson $status @{state='exporting'}
-       $child=Start-Process (Join-Path $PSHOME 'powershell.exe') -PassThru -ArgumentList ('-NoProfile -ExecutionPolicy Bypass -File "'+(Join-Path $PSScriptRoot 'Export-Thumbnails.ps1')+'" -RuntimeRoot "'+$root+'" -Id '+$p.id)
-       break
+      # Reserve thumbnail work under the same lock used by source reload.
+      $thumbnailChild=Invoke-LFProjectLock $root $p.id {param($lockedDir)
+       $status=Join-Path $lockedDir 'thumbs/status.json'
+       if(-not (Test-Path $status)){
+        Write-LFJson $status @{state='exporting'}
+        Start-Process (Join-Path $PSHOME 'powershell.exe') -WindowStyle Hidden -PassThru -ArgumentList ('-NoProfile -ExecutionPolicy Bypass -File "'+(Join-Path $PSScriptRoot 'Export-Thumbnails.ps1')+'" -RuntimeRoot "'+$root+'" -Id '+$p.id)
+       }
       }
+      if($thumbnailChild){$child=$thumbnailChild;break}
      }
     }
    }
